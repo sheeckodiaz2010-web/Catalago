@@ -1849,7 +1849,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
                 document.getElementById('configModal').classList.add('active');
             } catch (error) {
                 console.error('Firebase admin sign-in / catalog initialization failed:', error);
-                alert('No se pudo iniciar sesión o preparar el catálogo. Verifica el correo, la contraseña y tu conexión.');
+                alert('No se pudo iniciar sesión o preparar el catálogo. Verifica el correo, la contraseña y tu conexión.\n\n[Diagnóstico] ' + (error.code || '') + ' ' + (error.message || error));
             }
         };
         window.signOutCatalogAdmin = async function() {
@@ -1860,7 +1860,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             window.setCatalogAdminAuthState(user);
             if (user) initializeAdminCatalog().catch(error => {
                 console.error('No se pudo inicializar el catálogo de Firebase:', error);
-                alert('No se pudo cargar o migrar el catálogo. Los datos locales no se han borrado. Revisa la conexión y las reglas de Firestore.');
+                alert('No se pudo cargar o migrar el catálogo. Los datos locales no se han borrado. Revisa la conexión y las reglas de Firestore.\n\n[Diagnóstico] ' + (error.code || '') + ' ' + (error.message || error));
             });
         });
         onSnapshot(catalogCollection, snapshot => {
