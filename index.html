@@ -831,8 +831,12 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             <div class="modal-body">
                 <form onsubmit="handleLogin(event)">
                     <div class="form-group">
-                        <label>Contrase&#xF1;a de Administrador</label>
-                        <input type="password" id="adminPasswordInput" required placeholder="Introduce clave...">
+                        <label>Correo electr&#xF3;nico del administrador</label>
+                        <input type="email" id="adminEmailInput" required autocomplete="username" placeholder="admin@ejemplo.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Contrase&#xF1;a</label>
+                        <input type="password" id="adminPasswordInput" required autocomplete="current-password" placeholder="Contrase&#xF1;a de Firebase">
                     </div>
                     <button type="submit" class="btn-submit">Entrar al Panel</button>
                 </form>
@@ -851,7 +855,6 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
                 <button class="config-menu-btn" onclick="openAddModal()">&#x2699;&#xFE0F; Agregar Nuevo Producto</button>
                 <button class="config-menu-btn" onclick="openManagerModal()">&#x1F4CB; Administrar Productos (Activos/Sin Stock)</button>
                 <button class="config-menu-btn" onclick="openCategoryModal()">&#x1F4C2; Administrar Categor&#xED;as</button>
-                <button class="config-menu-btn" onclick="openPasswordModal()">&#x1F511; Cambiar Contrase&#xF1;a</button>
                 <button class="config-menu-btn danger" onclick="logoutAdmin()">&#x1F6AA; Cerrar Sesi&#xF3;n Administrador</button>
             </div>
         </div>
@@ -971,25 +974,6 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
         </div>
     </div>
 
-    <!-- Modal: Cambiar Contrase&#xF1;a -->
-    <div id="passwordModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Cambiar Contrase&#xF1;a</h3>
-                <button class="close-btn" onclick="closeModals()">&#x2715;</button>
-            </div>
-            <div class="modal-body">
-                <form onsubmit="handleChangePassword(event)">
-                    <div class="form-group">
-                        <label>Nueva Contrase&#xF1;a</label>
-                        <input type="password" id="newAdminPassword" required placeholder="M&#xED;nimo 4 caracteres">
-                    </div>
-                    <button type="submit" class="btn-submit">Guardar Contrase&#xF1;a</button>
-                </form>
-            </div>
-        </div>
-    </div>
-
     <script>
         function leerJSONSeguro(clave, valorPorDefecto) {
             try {
@@ -1003,26 +987,83 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             }
         }
 
-        let products = leerJSONSeguro('digar_products', []);
-        let categories = leerJSONSeguro('digar_categories', ['General', 'Dulces', 'Chicles', 'Botanas']);
+        // El catálogo público se carga exclusivamente desde Firestore. El carrito sigue siendo local.
+        let products = [];
+        let categories = ['General', 'Dulces', 'Chicles', 'Botanas'];
         let cart = leerJSONSeguro('digar_cart', {});
-        let adminPassword = localStorage.getItem('digar_admin_pass') || '1234';
-        let isAdminLoggedIn = sessionStorage.getItem('digar_is_admin') === 'true';
+        let isAdminLoggedIn = false;
         let currentCategoryFilter = 'Todos';
         let currentSearchTerm = '';
 
         let tempSelections = {};
 
         function saveToStorage() {
+            // No sincroniza ni conserva datos del POS; solo persiste el carrito del visitante.
             try {
-                localStorage.setItem('digar_products', JSON.stringify(products));
-                localStorage.setItem('digar_categories', JSON.stringify(categories));
                 localStorage.setItem('digar_cart', JSON.stringify(cart));
-                localStorage.setItem('digar_admin_pass', adminPassword);
                 return true;
             } catch (e) {
-                console.error('Error guardando en localStorage:', e);
-                alert('No se pudo guardar: se qued\u00F3 sin espacio de almacenamiento en este dispositivo (probablemente por muchas fotos de productos). Borra o reduce fotos e intenta de nuevo.');
+                console.error('Error guardando el carrito local:', e);
+                alert('No se pudo guardar el carrito en este dispositivo.');
+                return false;
+            }
+        }
+
+        window.setCatalogAdminAuthState = function(user) {
+            isAdminLoggedIn = !!user;
+            if (!isAdminLoggedIn) closeModals();
+        };
+        window.applyCatalogFromFirebase = function(cloudProducts, cloudCategories) {
+            products = Array.isArray(cloudProducts) ? cloudProducts : [];
+            categories = Array.isArray(cloudCategories) && cloudCategories.length ? cloudCategories : ['General'];
+            if (currentCategoryFilter !== 'Todos' && !categories.includes(currentCategoryFilter)) currentCategoryFilter = 'Todos';
+            renderCategoriesBar();
+            updateCategorySelects();
+            renderCatalog();
+            if (isAdminLoggedIn) renderAdminLists();
+        };
+        window.getCatalogForFirebase = function() {
+            return {
+                products: products.map(p => ({ id: p.id, name: p.name, code: p.code, price: p.price, pieces: p.pieces, category: p.category, image: p.image, outOfStock: !!p.outOfStock })),
+                categories: categories.slice()
+            };
+        };
+        window.cacheCatalogFromFirebase = function(cloudProducts, cloudCategories) {
+            try {
+                localStorage.setItem('digar_products', JSON.stringify(cloudProducts));
+                localStorage.setItem('digar_categories', JSON.stringify(cloudCategories));
+            } catch (e) {
+                console.warn('Catálogo de Firebase cargado, pero no se pudo actualizar su caché local.', e);
+            }
+        };
+
+        function ensureCatalogAdmin() {
+            if (!isAdminLoggedIn) {
+                alert('Inicia sesión con la cuenta de administrador de Firebase para modificar el catálogo.');
+                return false;
+            }
+            return true;
+        }
+
+        function cloneCatalogState() {
+            return { products: products.map(p => ({ ...p })), categories: categories.slice(), currentCategoryFilter };
+        }
+
+        async function persistCatalogMutation(previousState) {
+            try {
+                if (typeof window.syncCatalogToFirebase !== 'function') throw new Error('Firebase todavía se está inicializando.');
+                await window.syncCatalogToFirebase();
+                return true;
+            } catch (error) {
+                products = previousState.products;
+                categories = previousState.categories;
+                currentCategoryFilter = previousState.currentCategoryFilter;
+                renderCategoriesBar();
+                updateCategorySelects();
+                renderCatalog();
+                if (isAdminLoggedIn) renderAdminLists();
+                console.error('No se pudo sincronizar el catálogo:', error);
+                alert('No se pudo guardar el cambio en Firebase. Revisa tu conexión y que la cuenta tenga permiso; no se guardó el cambio.');
                 return false;
             }
         }
@@ -1304,44 +1345,21 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
 
         function handleLogin(e) {
             e.preventDefault();
-            const pass = document.getElementById('adminPasswordInput').value;
-            if (pass === adminPassword) {
-                isAdminLoggedIn = true;
-                sessionStorage.setItem('digar_is_admin', 'true');
-                closeModals();
-                document.getElementById('configModal').classList.add('active');
-            } else {
-                alert("Contrase\u00F1a incorrecta");
+            const email = document.getElementById('adminEmailInput').value.trim();
+            const password = document.getElementById('adminPasswordInput').value;
+            if (typeof window.signInCatalogAdmin !== 'function') {
+                alert('Firebase todavía se está inicializando. Intenta de nuevo en unos segundos.');
+                return;
             }
+            window.signInCatalogAdmin(email, password);
         }
 
         function logoutAdmin() {
-            isAdminLoggedIn = false;
-            sessionStorage.removeItem('digar_is_admin');
-            closeModals();
-            alert("Sesi\u00F3n cerrada correctamente.");
-        }
-
-        function openPasswordModal() {
-            closeModals();
-            document.getElementById('passwordModal').classList.add('active');
-        }
-
-        function handleChangePassword(e) {
-            e.preventDefault();
-            const newPass = document.getElementById('newAdminPassword').value;
-            if (newPass.length >= 4) {
-                adminPassword = newPass;
-                saveToStorage();
-                alert("Contrase\u00F1a actualizada con \u00E9xito.");
-                closeModals();
-                document.getElementById('configModal').classList.add('active');
-            } else {
-                alert("La contrase\u00F1a debe tener al menos 4 caracteres.");
-            }
+            if (typeof window.signOutCatalogAdmin === 'function') window.signOutCatalogAdmin();
         }
 
         function openAddModal() {
+            if (!ensureCatalogAdmin()) return;
             updateCategorySelects();
             document.getElementById('addProductForm').reset();
             closeModals();
@@ -1349,12 +1367,14 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
         }
 
         function openManagerModal() {
+            if (!ensureCatalogAdmin()) return;
             renderAdminLists();
             closeModals();
             document.getElementById('managerModal').classList.add('active');
         }
 
         function openCategoryModal() {
+            if (!ensureCatalogAdmin()) return;
             renderCategoryAdminList();
             closeModals();
             document.getElementById('categoryModal').classList.add('active');
@@ -1383,8 +1403,9 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             }
         }
 
-        function handleSaveProduct(e) {
+        async function handleSaveProduct(e) {
             e.preventDefault();
+            if (!ensureCatalogAdmin()) return;
             const name = document.getElementById('prodName').value;
             const code = document.getElementById('prodCode').value.trim();
             const price = document.getElementById('prodPrice').value;
@@ -1392,27 +1413,24 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             const category = document.getElementById('prodCategory').value;
             const imageFile = document.getElementById('prodImage').files[0];
 
-            const reader = new FileReader();
-            reader.onload = function(uploadEvent) {
-                const newProduct = {
-                    id: Date.now().toString(),
-                    name,
-                    code,
-                    price,
-                    pieces,
-                    category,
-                    image: uploadEvent.target.result,
-                    outOfStock: false
-                };
-                products.unshift(newProduct);
-                saveToStorage();
-                closeModals();
-                renderCatalog();
-            };
-            reader.readAsDataURL(imageFile);
+            try {
+                if (!imageFile) throw new Error('Selecciona una foto para el producto.');
+                const originalDataUrl = await readImageFileAsDataUrl(imageFile);
+                const compressedImage = await window.compressCatalogImage(originalDataUrl);
+                const previousState = cloneCatalogState();
+                products.unshift({ id: Date.now().toString(), name, code, price, pieces, category, image: compressedImage, outOfStock: false });
+                if (await persistCatalogMutation(previousState)) {
+                    closeModals();
+                    renderCatalog();
+                }
+            } catch (error) {
+                console.error('No se pudo preparar la imagen:', error);
+                alert(error.message || 'No se pudo procesar la imagen. Prueba con otra foto.');
+            }
         }
 
         function renderAdminLists() {
+            if (!ensureCatalogAdmin()) return;
             const activeListContainer = document.getElementById('adminActiveList');
             const stockListContainer = document.getElementById('adminStockList');
 
@@ -1461,29 +1479,30 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             }
         }
 
-        function moveToStock(id) {
+        async function moveToStock(id) {
+            if (!ensureCatalogAdmin()) return;
             if (confirm("\u00BFEst\u00E1s seguro de enviar este producto a la secci\u00F3n de sin stock?")) {
                 const product = products.find(p => p.id === id);
                 if (product) {
+                    const previousState = cloneCatalogState();
                     product.outOfStock = true;
-                    saveToStorage();
-                    renderAdminLists();
-                    renderCatalog();
+                    if (await persistCatalogMutation(previousState)) { renderAdminLists(); renderCatalog(); }
                 }
             }
         }
 
-        function restoreProduct(id) {
+        async function restoreProduct(id) {
+            if (!ensureCatalogAdmin()) return;
             const product = products.find(p => p.id === id);
             if (product) {
+                const previousState = cloneCatalogState();
                 product.outOfStock = false;
-                saveToStorage();
-                renderAdminLists();
-                renderCatalog();
+                if (await persistCatalogMutation(previousState)) { renderAdminLists(); renderCatalog(); }
             }
         }
 
-        function deleteProduct(id) {
+        async function deleteProduct(id) {
+            if (!ensureCatalogAdmin()) return;
             const productIndex = products.findIndex(p => p.id === id);
             if (productIndex === -1) return;
 
@@ -1491,16 +1510,20 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
                 return;
             }
 
+            const previousState = cloneCatalogState();
             products.splice(productIndex, 1);
             delete cart[id];
             delete tempSelections[id];
             saveToStorage();
-            renderAdminLists();
-            renderCatalog();
-            updateCartBadge();
+            if (await persistCatalogMutation(previousState)) {
+                renderAdminLists();
+                renderCatalog();
+                updateCartBadge();
+            }
         }
 
         function openEditModal(id) {
+            if (!ensureCatalogAdmin()) return;
             const product = products.find(p => p.id === id);
             if (!product) return;
 
@@ -1517,8 +1540,9 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             document.getElementById('editModal').classList.add('active');
         }
 
-        function handleUpdateProduct(e) {
+        async function handleUpdateProduct(e) {
             e.preventDefault();
+            if (!ensureCatalogAdmin()) return;
             const id = document.getElementById('editId').value;
             const name = document.getElementById('editName').value;
             const code = document.getElementById('editCode').value.trim();
@@ -1530,39 +1554,40 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             const product = products.find(p => p.id === id);
             if (!product) return;
 
-            product.name = name;
-            product.code = code;
-            product.price = realPrice;
-            product.pieces = pieces;
-            product.category = category;
-
-            if (imageFile) {
-                const reader = new FileReader();
-                reader.onload = function(uploadEvent) {
-                    product.image = uploadEvent.target.result;
-                    saveToStorage();
+            try {
+                let compressedImage = product.image;
+                if (imageFile) compressedImage = await window.compressCatalogImage(await readImageFileAsDataUrl(imageFile));
+                const previousState = cloneCatalogState();
+                product.name = name;
+                product.code = code;
+                product.price = realPrice;
+                product.pieces = pieces;
+                product.category = category;
+                product.image = compressedImage;
+                if (await persistCatalogMutation(previousState)) {
                     closeModals();
                     renderCatalog();
-                };
-                reader.readAsDataURL(imageFile);
-            } else {
-                saveToStorage();
-                closeModals();
-                renderCatalog();
+                }
+            } catch (error) {
+                console.error('No se pudo preparar la imagen:', error);
+                alert(error.message || 'No se pudo procesar la imagen. Prueba con otra foto.');
             }
         }
 
-        function handleAddCategory(e) {
+        async function handleAddCategory(e) {
             e.preventDefault();
+            if (!ensureCatalogAdmin()) return;
             const nameInput = document.getElementById('newCategoryName');
             const name = nameInput.value.trim();
             if (name && !categories.includes(name)) {
+                const previousState = cloneCatalogState();
                 categories.push(name);
-                saveToStorage();
-                nameInput.value = '';
-                renderCategoryAdminList();
-                renderCategoriesBar();
-                updateCategorySelects();
+                if (await persistCatalogMutation(previousState)) {
+                    nameInput.value = '';
+                    renderCategoryAdminList();
+                    renderCategoriesBar();
+                    updateCategorySelects();
+                }
             }
         }
 
@@ -1579,10 +1604,12 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             `).join('');
         }
 
-        function renameCategory(oldName) {
+        async function renameCategory(oldName) {
+            if (!ensureCatalogAdmin()) return;
             const newName = prompt("Nuevo nombre para la categor\u00EDa:", oldName);
             if (newName && newName.trim() !== "" && !categories.includes(newName.trim())) {
                 const trimmed = newName.trim();
+                const previousState = cloneCatalogState();
                 const index = categories.indexOf(oldName);
                 if (index !== -1) {
                     categories[index] = trimmed;
@@ -1590,7 +1617,27 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
                         if (p.category === oldName) p.category = trimmed;
                     });
                     if (currentCategoryFilter === oldName) currentCategoryFilter = trimmed;
-                    saveToStorage();
+                    if (await persistCatalogMutation(previousState)) {
+                        renderCategoryAdminList();
+                        renderCategoriesBar();
+                        renderCatalog();
+                        updateCategorySelects();
+                    }
+                }
+            }
+        }
+
+        async function deleteCategory(cat) {
+            if (!ensureCatalogAdmin()) return;
+            if (confirm(`\u00BFEliminar la categor\u00EDa "${cat}"? Los productos pasar\u00E1n a la categor\u00EDa "General".`)) {
+                const previousState = cloneCatalogState();
+                categories = categories.filter(c => c !== cat);
+                if (categories.length === 0) categories.push('General');
+                products.forEach(p => {
+                    if (p.category === cat) p.category = categories[0];
+                });
+                if (currentCategoryFilter === cat) currentCategoryFilter = 'Todos';
+                if (await persistCatalogMutation(previousState)) {
                     renderCategoryAdminList();
                     renderCategoriesBar();
                     renderCatalog();
@@ -1599,24 +1646,232 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             }
         }
 
-        function deleteCategory(cat) {
-            if (confirm(`\u00BFEliminar la categor\u00EDa "${cat}"? Los productos pasar\u00E1n a la categor\u00EDa "General".`)) {
-                categories = categories.filter(c => c !== cat);
-                if (categories.length === 0) categories.push('General');
-                products.forEach(p => {
-                    if (p.category === cat) p.category = categories[0];
-                });
-                if (currentCategoryFilter === cat) currentCategoryFilter = 'Todos';
-                saveToStorage();
-                renderCategoryAdminList();
-                renderCategoriesBar();
-                renderCatalog();
-                updateCategorySelects();
-            }
+        function readImageFileAsDataUrl(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(String(reader.result || ''));
+                reader.onerror = () => reject(new Error('No se pudo leer la foto seleccionada.'));
+                reader.readAsDataURL(file);
+            });
         }
 
         renderCategoriesBar();
         renderCatalog();
+    </script>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
+        import { getFirestore, collection, doc, getDocs, onSnapshot, writeBatch } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
+
+        const firebaseConfig = {
+            apiKey: 'AIzaSyBW2CuE6HcgqMoIccoUo8UBrYfPkW4scD8',
+            authDomain: 'digar-catalago.firebaseapp.com',
+            projectId: 'digar-catalago',
+            storageBucket: 'digar-catalago.firebasestorage.app',
+            messagingSenderId: '19677295543',
+            appId: '1:19677295543:web:6e3f1ea3ab3abd754fae32'
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const catalogCollection = collection(db, 'productos');
+        const configDoc = doc(db, 'productos', '__catalogConfig__');
+        const MAX_IMAGE_CHARS = 500000;
+        let adminInitialization = null;
+        let migrationInProgress = false;
+
+        function normalizedCategories(input) {
+            const values = Array.isArray(input) ? input.map(x => String(x || '').trim()).filter(Boolean) : [];
+            const unique = [...new Set(values)];
+            return unique.length ? unique : ['General'];
+        }
+        function safePublicProduct(p) {
+            return {
+                id: String(p.id !== undefined && p.id !== null ? p.id : ''), name: String(p.name !== undefined && p.name !== null ? p.name : ''), code: String(p.code !== undefined && p.code !== null ? p.code : ''),
+                price: p.price !== undefined && p.price !== null ? p.price : 0, pieces: String(p.pieces !== undefined && p.pieces !== null ? p.pieces : ''), category: String(p.category || 'General'),
+                image: String(p.image || ''), outOfStock: !!p.outOfStock
+            };
+        }
+        async function compressImageDataUrl(dataUrl) {
+            if (!/^data:image\//i.test(dataUrl)) {
+                if (dataUrl.length > MAX_IMAGE_CHARS) throw new Error('La imagen supera 500,000 caracteres y no se puede guardar en el catálogo gratuito.');
+                return dataUrl;
+            }
+            const image = new Image();
+            await new Promise((resolve, reject) => {
+                image.onload = resolve;
+                image.onerror = () => reject(new Error('No se pudo abrir la imagen para comprimirla.'));
+                image.src = dataUrl;
+            });
+            const sourceWidth = image.naturalWidth || image.width;
+            const sourceHeight = image.naturalHeight || image.height;
+            const initialScale = Math.min(1, 720 / Math.max(sourceWidth, sourceHeight));
+            for (const scale of [initialScale, Math.min(initialScale, .88), Math.min(initialScale, .75), Math.min(initialScale, .62), Math.min(initialScale, .5)]) {
+                const width = Math.max(1, Math.round(sourceWidth * scale));
+                const height = Math.max(1, Math.round(sourceHeight * scale));
+                const canvas = document.createElement('canvas');
+                canvas.width = width; canvas.height = height;
+                const context = canvas.getContext('2d', { alpha: false });
+                if (!context) throw new Error('Este navegador no pudo preparar la foto.');
+                context.fillStyle = '#fff'; context.fillRect(0, 0, width, height);
+                context.drawImage(image, 0, 0, width, height);
+                for (const quality of [.82, .72, .62, .52, .42, .32]) {
+                    const compressed = canvas.toDataURL('image/jpeg', quality);
+                    if (compressed.length <= MAX_IMAGE_CHARS) return compressed;
+                }
+            }
+            throw new Error('La foto sigue siendo demasiado grande. Elige otra imagen más pequeña para mantener el catálogo dentro del plan gratuito.');
+        }
+        window.compressCatalogImage = compressImageDataUrl;
+        function productDocId(id) {
+            const key = encodeURIComponent(String(id));
+            if (!key || key.length > 1400 || key === '__catalogConfig__') throw new Error('El identificador de un producto no es válido o está reservado por Firestore.');
+            return key;
+        }
+        async function prepareProduct(input, compressAllImages = false) {
+            const product = safePublicProduct(input);
+            if (!product.id) product.id = String(Date.now());
+            if (product.image && (compressAllImages || product.image.length > MAX_IMAGE_CHARS)) product.image = await compressImageDataUrl(product.image);
+            if (product.image.length > MAX_IMAGE_CHARS) throw new Error(`La foto del producto "${product.name || product.id}" supera 500,000 caracteres.`);
+            return product;
+        }
+        function publicProjection(input) { return safePublicProduct(input); }
+        async function writeCatalogToFirestore(inputProducts, inputCategories, forceCompress = false) {
+            if (!auth.currentUser) throw new Error('La sesión de administrador de Firebase no está activa.');
+            const prepared = [];
+            const desiredIds = new Set();
+            for (const raw of inputProducts) {
+                const product = await prepareProduct(raw, forceCompress);
+                const key = productDocId(product.id);
+                if (desiredIds.has(key)) throw new Error('Hay productos con identificadores duplicados.');
+                desiredIds.add(key);
+                prepared.push({ key, product });
+            }
+            const categories = normalizedCategories(inputCategories);
+            const snapshot = await getDocs(catalogCollection);
+            const existing = new Map(snapshot.docs.filter(d => d.id !== '__catalogConfig__').map(d => [d.id, d]));
+            const operations = [];
+            for (const [key, oldDoc] of existing) if (!desiredIds.has(key)) operations.push({ kind: 'delete', ref: oldDoc.ref });
+            for (const { key, product } of prepared) {
+                const oldDoc = existing.get(key);
+                const oldData = oldDoc ? oldDoc.data() : null;
+                const allowed = ['id', 'name', 'code', 'price', 'pieces', 'category', 'image', 'outOfStock'];
+                const oldPublic = oldData ? publicProjection(oldData) : null;
+                const onlyPublicFields = oldData && Object.keys(oldData).every(k => allowed.includes(k));
+                if (!oldData || !onlyPublicFields || JSON.stringify(oldPublic) !== JSON.stringify(product)) {
+                    operations.push({ kind: 'set', ref: doc(db, 'productos', key), data: product });
+                }
+            }
+            const oldConfigDoc = snapshot.docs.find(d => d.id === '__catalogConfig__');
+            const oldConfig = oldConfigDoc ? oldConfigDoc.data() : null;
+            const configData = { categories, catalogInitialized: true };
+            if (!oldConfig || JSON.stringify(normalizedCategories(oldConfig.categories)) !== JSON.stringify(categories) || oldConfig.catalogInitialized !== true) {
+                operations.push({ kind: 'set', ref: configDoc, data: configData });
+            }
+            // 10 writes/batch stays below the 500-write cap and leaves room for data-URL photos.
+            for (let offset = 0; offset < operations.length; offset += 10) {
+                const batch = writeBatch(db);
+                for (const op of operations.slice(offset, offset + 10)) {
+                    if (op.kind === 'delete') batch.delete(op.ref);
+                    else batch.set(op.ref, op.data);
+                }
+                await batch.commit();
+            }
+            if (!operations.length && !oldConfig) {
+                const batch = writeBatch(db); batch.set(configDoc, configData); await batch.commit();
+            }
+            return { products: prepared.map(x => x.product), categories };
+        }
+        window.syncCatalogToFirebase = async function() {
+            if (!auth.currentUser) throw new Error('Inicia sesión como administrador antes de sincronizar.');
+            const local = window.getCatalogForFirebase();
+            const result = await writeCatalogToFirestore(local.products, local.categories, false);
+            window.cacheCatalogFromFirebase(result.products, result.categories);
+            return result;
+        };
+        async function initializeAdminCatalog() {
+            if (adminInitialization) return adminInitialization;
+            adminInitialization = (async () => {
+                const snapshot = await getDocs(catalogCollection);
+                const productDocs = snapshot.docs.filter(d => d.id !== '__catalogConfig__');
+                const configSnapshot = snapshot.docs.find(d => d.id === '__catalogConfig__');
+                const config = configSnapshot ? configSnapshot.data() : {};
+                if (productDocs.length) {
+                    const cloudProducts = productDocs.map(d => publicProjection(d.data()));
+                    const cloudCategories = normalizedCategories(config.categories || cloudProducts.map(p => p.category));
+                    window.applyCatalogFromFirebase(cloudProducts, cloudCategories);
+                    window.cacheCatalogFromFirebase(cloudProducts, cloudCategories);
+                    if (!configSnapshot || config.catalogInitialized !== true || !Array.isArray(config.categories)) {
+                        const batch = writeBatch(db); batch.set(configDoc, { categories: cloudCategories, catalogInitialized: true }); await batch.commit();
+                    }
+                    return;
+                }
+                if (config.catalogInitialized === true) {
+                    const cloudCategories = normalizedCategories(config.categories);
+                    window.applyCatalogFromFirebase([], cloudCategories);
+                    window.cacheCatalogFromFirebase([], cloudCategories);
+                    return;
+                }
+                // One-time migration only from the published catalog's own GitHub Pages localStorage.
+                let localProducts = [], localCategories = [];
+                if (location.hostname === 'sheeckodiaz2010-web.github.io') {
+                    try { localProducts = JSON.parse(localStorage.getItem('digar_products') || '[]'); } catch (_) { localProducts = []; }
+                    try { localCategories = JSON.parse(localStorage.getItem('digar_categories') || '[]'); } catch (_) { localCategories = []; }
+                }
+                localProducts = Array.isArray(localProducts) ? localProducts : [];
+                const migrationCategories = normalizedCategories(localCategories.length ? localCategories : (config.categories || ['General', 'Dulces', 'Chicles', 'Botanas']));
+                if (localProducts.length) {
+                    migrationInProgress = true;
+                    try {
+                        const migrated = await writeCatalogToFirestore(localProducts, migrationCategories, true);
+                        window.applyCatalogFromFirebase(migrated.products, migrated.categories);
+                        // Cache/localStorage replacement only after all migration writes committed successfully.
+                        window.cacheCatalogFromFirebase(migrated.products, migrated.categories);
+                    } finally {
+                        migrationInProgress = false;
+                    }
+                } else {
+                    const finalCategories = normalizedCategories(config.categories || migrationCategories);
+                    const batch = writeBatch(db); batch.set(configDoc, { categories: finalCategories, catalogInitialized: true }); await batch.commit();
+                    window.applyCatalogFromFirebase([], finalCategories);
+                    window.cacheCatalogFromFirebase([], finalCategories);
+                }
+            })();
+            try { await adminInitialization; }
+            finally { adminInitialization = null; }
+        }
+        window.signInCatalogAdmin = async function(email, password) {
+            try {
+                const credential = await signInWithEmailAndPassword(auth, email, password);
+                window.setCatalogAdminAuthState(credential.user);
+                await initializeAdminCatalog();
+                document.getElementById('loginModal').classList.remove('active');
+                document.getElementById('configModal').classList.add('active');
+            } catch (error) {
+                console.error('Firebase admin sign-in / catalog initialization failed:', error);
+                alert('No se pudo iniciar sesión o preparar el catálogo. Verifica el correo, la contraseña y tu conexión.');
+            }
+        };
+        window.signOutCatalogAdmin = async function() {
+            try { await signOut(auth); window.setCatalogAdminAuthState(null); alert('Sesión de administrador cerrada.'); }
+            catch (error) { console.error('Firebase sign-out failed:', error); alert('No se pudo cerrar la sesión en Firebase.'); }
+        };
+        onAuthStateChanged(auth, user => {
+            window.setCatalogAdminAuthState(user);
+            if (user) initializeAdminCatalog().catch(error => {
+                console.error('No se pudo inicializar el catálogo de Firebase:', error);
+                alert('No se pudo cargar o migrar el catálogo. Los datos locales no se han borrado. Revisa la conexión y las reglas de Firestore.');
+            });
+        });
+        onSnapshot(catalogCollection, snapshot => {
+            const configSnapshot = snapshot.docs.find(d => d.id === '__catalogConfig__');
+            const config = configSnapshot ? configSnapshot.data() : {};
+            const cloudProducts = snapshot.docs.filter(d => d.id !== '__catalogConfig__').map(d => publicProjection(d.data()));
+            const cloudCategories = normalizedCategories(config.categories || cloudProducts.map(p => p.category));
+            window.applyCatalogFromFirebase(cloudProducts, cloudCategories);
+            // An empty initial collection must not erase possible local migration data.
+            if (cloudProducts.length && !migrationInProgress) window.cacheCatalogFromFirebase(cloudProducts, cloudCategories);
+        }, error => console.error('No se pudo leer el catálogo público de Firestore:', error));
     </script>
 </body>
 </html>
