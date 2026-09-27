@@ -1675,7 +1675,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
         const db = getFirestore(app);
         const auth = getAuth(app);
         const catalogCollection = collection(db, 'productos');
-        const configDoc = doc(db, 'productos', '__catalogConfig__');
+        const configDoc = doc(db, 'productos', 'catalogConfig');
         const MAX_IMAGE_CHARS = 500000;
         let adminInitialization = null;
         let migrationInProgress = false;
@@ -1725,7 +1725,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
         window.compressCatalogImage = compressImageDataUrl;
         function productDocId(id) {
             const key = encodeURIComponent(String(id));
-            if (!key || key.length > 1400 || key === '__catalogConfig__') throw new Error('El identificador de un producto no es válido o está reservado por Firestore.');
+            if (!key || key.length > 1400 || key === 'catalogConfig') throw new Error('El identificador de un producto no es válido o está reservado por Firestore.');
             return key;
         }
         async function prepareProduct(input, compressAllImages = false) {
@@ -1749,7 +1749,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             }
             const categories = normalizedCategories(inputCategories);
             const snapshot = await getDocs(catalogCollection);
-            const existing = new Map(snapshot.docs.filter(d => d.id !== '__catalogConfig__').map(d => [d.id, d]));
+            const existing = new Map(snapshot.docs.filter(d => d.id !== 'catalogConfig').map(d => [d.id, d]));
             const operations = [];
             for (const [key, oldDoc] of existing) if (!desiredIds.has(key)) operations.push({ kind: 'delete', ref: oldDoc.ref });
             for (const { key, product } of prepared) {
@@ -1762,7 +1762,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
                     operations.push({ kind: 'set', ref: doc(db, 'productos', key), data: product });
                 }
             }
-            const oldConfigDoc = snapshot.docs.find(d => d.id === '__catalogConfig__');
+            const oldConfigDoc = snapshot.docs.find(d => d.id === 'catalogConfig');
             const oldConfig = oldConfigDoc ? oldConfigDoc.data() : null;
             const configData = { categories, catalogInitialized: true };
             if (!oldConfig || JSON.stringify(normalizedCategories(oldConfig.categories)) !== JSON.stringify(categories) || oldConfig.catalogInitialized !== true) {
@@ -1793,8 +1793,8 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             if (adminInitialization) return adminInitialization;
             adminInitialization = (async () => {
                 const snapshot = await getDocs(catalogCollection);
-                const productDocs = snapshot.docs.filter(d => d.id !== '__catalogConfig__');
-                const configSnapshot = snapshot.docs.find(d => d.id === '__catalogConfig__');
+                const productDocs = snapshot.docs.filter(d => d.id !== 'catalogConfig');
+                const configSnapshot = snapshot.docs.find(d => d.id === 'catalogConfig');
                 const config = configSnapshot ? configSnapshot.data() : {};
                 if (productDocs.length) {
                     const cloudProducts = productDocs.map(d => publicProjection(d.data()));
@@ -1864,9 +1864,9 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             });
         });
         onSnapshot(catalogCollection, snapshot => {
-            const configSnapshot = snapshot.docs.find(d => d.id === '__catalogConfig__');
+            const configSnapshot = snapshot.docs.find(d => d.id === 'catalogConfig');
             const config = configSnapshot ? configSnapshot.data() : {};
-            const cloudProducts = snapshot.docs.filter(d => d.id !== '__catalogConfig__').map(d => publicProjection(d.data()));
+            const cloudProducts = snapshot.docs.filter(d => d.id !== 'catalogConfig').map(d => publicProjection(d.data()));
             const cloudCategories = normalizedCategories(config.categories || cloudProducts.map(p => p.category));
             window.applyCatalogFromFirebase(cloudProducts, cloudCategories);
             // An empty initial collection must not erase possible local migration data.
