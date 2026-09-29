@@ -457,7 +457,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             font-size: 0.75rem;
             font-weight: 700;
         }
-        .pcard-body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 4px; }
+        .pcard-body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 6px; }
         .pcard-title {
             font-size: 0.9rem;
             font-weight: 700;
@@ -470,6 +470,38 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             min-height: 2.5em;
         }
         .pcard-price { font-size: 1.15rem; font-weight: 800; color: var(--accent); }
+        .pcard-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 2px;
+        }
+        .pcard-actions .qty-selector {
+            width: 100%;
+            justify-content: space-between;
+        }
+        .pcard-actions .qty-btn {
+            width: 34px;
+            height: 34px;
+            font-size: 0.95rem;
+        }
+        .pcard-actions .qty-input,
+        .pcard-actions .qty-display {
+            width: 36px;
+            height: 34px;
+            min-width: 28px;
+            font-size: 0.9rem;
+        }
+        .pcard-actions .btn-add-cart {
+            width: 100%;
+            height: 36px;
+            padding: 0 10px;
+            font-size: 0.85rem;
+            border-radius: 10px;
+            justify-content: center;
+            gap: 6px;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+        }
 
         #productDetail {
             display: none;
@@ -1233,6 +1265,14 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
                         <div class="pcard-body">
                             <div class="pcard-title">${p.name}</div>
                             <div class="pcard-price">$${Number(p.price).toFixed(2)}</div>
+                            <div class="pcard-actions" onclick="event.stopPropagation()">
+                                <div class="qty-selector">
+                                    <button type="button" class="qty-btn" onclick="updateTempQty('${p.id}', -1)">-</button>
+                                    <input type="number" min="1" step="1" inputmode="numeric" class="qty-display qty-input" id="qty-card-${p.id}" value="${tempSelections[p.id]}" onchange="setTempQty('${p.id}', this.value)">
+                                    <button type="button" class="qty-btn" onclick="updateTempQty('${p.id}', 1)">+</button>
+                                </div>
+                                <button type="button" class="btn-add-cart" id="cardAddBtn-${p.id}" onclick="addToCartFromCard('${p.id}')">\uD83D\uDED2 Agregar</button>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -1314,6 +1354,14 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
 
         window.addEventListener('popstate', hideProductDetail);
 
+        function syncQtyDisplays(id) {
+            const qty = tempSelections[id] || 1;
+            const detailInput = document.getElementById(`qty-${id}`);
+            const cardInput = document.getElementById(`qty-card-${id}`);
+            if (detailInput) detailInput.value = qty;
+            if (cardInput) cardInput.value = qty;
+        }
+
         function updateTempQty(id, change) {
             if (tempSelections[id] === undefined) {
                 tempSelections[id] = 1;
@@ -1322,10 +1370,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             if (tempSelections[id] < 1) {
                 tempSelections[id] = 1;
             }
-            const display = document.getElementById(`qty-${id}`);
-            if (display) {
-                display.value = tempSelections[id];
-            }
+            syncQtyDisplays(id);
         }
 
         function setTempQty(id, value) {
@@ -1334,10 +1379,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
                 qty = 1;
             }
             tempSelections[id] = qty;
-            const display = document.getElementById(`qty-${id}`);
-            if (display) {
-                display.value = qty;
-            }
+            syncQtyDisplays(id);
         }
 
         function addToCart(id) {
@@ -1349,6 +1391,23 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             }
             saveToStorage();
             updateCartBadge();
+        }
+
+        function addToCartFromCard(id) {
+            addToCart(id);
+            const btn = document.getElementById(`cardAddBtn-${id}`);
+            if (btn) {
+                const prev = btn.innerHTML;
+                btn.innerHTML = 'Agregado \u2713';
+                btn.disabled = true;
+                setTimeout(() => {
+                    const b = document.getElementById(`cardAddBtn-${id}`);
+                    if (b) {
+                        b.innerHTML = prev;
+                        b.disabled = false;
+                    }
+                }, 1200);
+            }
         }
 
         // Quita del carrito productos que ya no existen o están agotados (solo cuando el catálogo ya cargó)
