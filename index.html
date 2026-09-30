@@ -1280,15 +1280,42 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             }
         }
 
-        // El catálogo público se carga exclusivamente desde Firestore. El carrito sigue siendo local.
-        let products = [];
-        let categories = ['General', 'Dulces', 'Chicles', 'Botanas'];
+        // Catálogo: primero caché local (offline), luego Firestore cuando haya red.
+        let products = leerJSONSeguro('digar_products', []);
+        if (!Array.isArray(products)) products = [];
+        let categories = leerJSONSeguro('digar_categories', ['General', 'Dulces', 'Chicles', 'Botanas']);
+        if (!Array.isArray(categories) || !categories.length) categories = ['General', 'Dulces', 'Chicles', 'Botanas'];
         let cart = leerJSONSeguro('digar_cart', {});
         let isAdminLoggedIn = false;
         let currentCategoryFilter = 'Todos';
         let currentSearchTerm = '';
+        let catalogFromCacheOnly = false;
 
         let tempSelections = {};
+
+        function updateOfflineBanner() {
+            let bar = document.getElementById('offlineBanner');
+            if (!bar) {
+                bar = document.createElement('div');
+                bar.id = 'offlineBanner';
+                bar.setAttribute('role', 'status');
+                bar.style.cssText = 'display:none;position:sticky;top:0;z-index:150;background:#b45309;color:#fff;text-align:center;padding:8px 12px;font-size:0.85rem;font-weight:700;';
+                const header = document.querySelector('header');
+                if (header && header.parentNode) header.parentNode.insertBefore(bar, header.nextSibling);
+                else document.body.prepend(bar);
+            }
+            const offline = !navigator.onLine;
+            if (offline) {
+                bar.style.display = 'block';
+                bar.textContent = products.length
+                    ? 'Sin conexión — mostrando catálogo guardado en este dispositivo'
+                    : 'Sin conexión — abre la app con internet una vez para guardar el catálogo';
+            } else {
+                bar.style.display = 'none';
+            }
+        }
+        window.addEventListener('online', () => { updateOfflineBanner(); });
+        window.addEventListener('offline', () => { updateOfflineBanner(); });
 
         function saveToStorage() {
             // No sincroniza ni conserva datos del POS; solo persiste el carrito del visitante.
@@ -1306,14 +1333,24 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             isAdminLoggedIn = !!user;
             if (!isAdminLoggedIn) closeModals();
         };
-        window.applyCatalogFromFirebase = function(cloudProducts, cloudCategories) {
-            products = Array.isArray(cloudProducts) ? cloudProducts : [];
+        window.applyCatalogFromFirebase = function(cloudProducts, cloudCategories, opts) {
+            opts = opts || {};
+            // No borrar catálogo local con un snapshot vacío si estamos offline o es un fallo de red
+            const incoming = Array.isArray(cloudProducts) ? cloudProducts : [];
+            if (!incoming.length && products.length && (opts.allowEmpty !== true) && (!navigator.onLine || opts.fromError)) {
+                catalogFromCacheOnly = true;
+                updateOfflineBanner();
+                return;
+            }
+            products = incoming;
             categories = Array.isArray(cloudCategories) && cloudCategories.length ? cloudCategories : ['General'];
             if (currentCategoryFilter !== 'Todos' && !categories.includes(currentCategoryFilter)) currentCategoryFilter = 'Todos';
+            catalogFromCacheOnly = !!opts.fromCache;
             renderCategoriesBar();
             updateCategorySelects();
             renderCatalog();
             if (isAdminLoggedIn) renderAdminLists();
+            updateOfflineBanner();
         };
         window.getCatalogForFirebase = function() {
             return {
@@ -1409,9 +1446,16 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             }
 
             if (activeProducts.length === 0) {
-                const mensaje = currentSearchTerm
-                    ? 'No se encontraron productos que coincidan con tu b\u00FAsqueda.'
-                    : 'No hay productos disponibles en esta categor\u00EDa.';
+                let mensaje;
+                if (currentSearchTerm) {
+                    mensaje = 'No se encontraron productos que coincidan con tu b\u00FAsqueda.';
+                } else if (!products.length && !navigator.onLine) {
+                    mensaje = 'Sin conexi\u00F3n y a\u00FAn no hay cat\u00E1logo guardado. Con\u00E9ctate a internet una vez para descargarlo.';
+                } else if (!products.length) {
+                    mensaje = 'Cargando cat\u00E1logo\u2026';
+                } else {
+                    mensaje = 'No hay productos disponibles en esta categor\u00EDa.';
+                }
                 container.innerHTML = `<div class="empty-state">${mensaje}</div>`;
                 return;
             }
@@ -2136,10 +2180,11 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
 
         renderCategoriesBar();
         renderCatalog();
+        updateOfflineBanner();
     </script>
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
-        import { getFirestore, collection, doc, getDocs, onSnapshot, writeBatch } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
+        import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, getDocs, onSnapshot, writeBatch } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
 
         const firebaseConfig = {
@@ -2151,7 +2196,17 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             appId: '1:19677295543:web:6e3f1ea3ab3abd754fae32'
         };
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        let db;
+        try {
+            db = initializeFirestore(app, {
+                localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+            });
+        } catch (e) {
+            // Ya inicializado en otra pestaña o API no disponible
+            const { getFirestore } = await import('https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js');
+            db = getFirestore(app);
+            console.warn('Firestore cache persistente no disponible, usando memoria:', e);
+        }
         const auth = getAuth(app);
         const catalogCollection = collection(db, 'productos');
         const configDoc = doc(db, 'productos', 'catalogConfig');
@@ -2347,10 +2402,14 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             const config = configSnapshot ? configSnapshot.data() : {};
             const cloudProducts = snapshot.docs.filter(d => d.id !== 'catalogConfig').map(d => publicProjection(d.data()));
             const cloudCategories = normalizedCategories(config.categories || cloudProducts.map(p => p.category));
-            window.applyCatalogFromFirebase(cloudProducts, cloudCategories);
+            window.applyCatalogFromFirebase(cloudProducts, cloudCategories, { allowEmpty: true });
             // An empty initial collection must not erase possible local migration data.
             if (cloudProducts.length && !migrationInProgress) window.cacheCatalogFromFirebase(cloudProducts, cloudCategories);
-        }, error => console.error('No se pudo leer el catálogo público de Firestore:', error));
+        }, error => {
+            console.error('No se pudo leer el catálogo público de Firestore:', error);
+            // Mantener lo que haya en localStorage / memoria
+            window.applyCatalogFromFirebase(products, categories, { fromError: true, fromCache: true });
+        });
     </script>
 
     <!-- Barra de navegación inferior (estilo app nativa) -->

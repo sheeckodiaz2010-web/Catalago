@@ -1,11 +1,12 @@
-/* DIGAR Catalog – Service Worker mínimo para instalación PWA */
-const CACHE = 'digar-v1';
+/* DIGAR Catalog – Service Worker (offline shell) */
+const CACHE = 'digar-v2';
 const PRECACHE = [
   './',
   './index.html',
   './manifest.webmanifest',
   './icon-192.png',
-  './icon-512.png'
+  './icon-512.png',
+  './apple-touch-icon.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -27,7 +28,17 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
 
-  // Network-first for HTML/navigation so catalog stays fresh from Firebase
+  const url = new URL(req.url);
+
+  // No interceptar Firebase / APIs externas
+  if (url.hostname.includes('googleapis.com') ||
+      url.hostname.includes('firebaseio.com') ||
+      url.hostname.includes('firebasestorage') ||
+      url.hostname.includes('gstatic.com') ||
+      url.hostname.includes('firebase')) {
+    return;
+  }
+
   if (req.mode === 'navigate' || (req.headers.get('accept') || '').includes('text/html')) {
     event.respondWith(
       fetch(req)
@@ -41,12 +52,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Cache-first for static assets (icons, manifest)
   event.respondWith(
     caches.match(req).then((cached) => {
       if (cached) return cached;
       return fetch(req).then((res) => {
-        if (res && res.ok && req.url.startsWith(self.location.origin)) {
+        if (res && res.ok && url.origin === self.location.origin) {
           const copy = res.clone();
           caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
         }
