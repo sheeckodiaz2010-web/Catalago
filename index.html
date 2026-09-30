@@ -10,7 +10,10 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="application-name" content="DIGAR Catálogo">
     <meta name="description" content="Catálogo mayorista DIGAR — pedidos rápidos con código QR">
-    <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22DIGAR%20Cat%C3%A1logo%20Mayorista%22%2C%22short_name%22%3A%22DIGAR%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%231e293b%22%2C%22theme_color%22%3A%22%231e293b%22%2C%22orientation%22%3A%22portrait%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%20100%20100'%253E%253Crect%20fill%3D'%231e293b'%20width%3D'100'%20height%3D'100'%20rx%3D'20'%2F%253E%253Ctext%20x%3D'50'%20y%3D'62'%20font-size%3D'48'%20text-anchor%3D'middle'%20fill%3D'white'%253E%F0%9F%93%A6%253C%2Ftext%253E%253C%2Fsvg%253E%22%2C%22sizes%22%3A%22any%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%2C%22purpose%22%3A%22any%20maskable%22%7D%5D%7D">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
     <title>DIGAR - Catálogo Mayorista</title>
     <!-- Librería para generar códigos QR -->
     <script>
@@ -2366,5 +2369,15 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             <span>Ajustes</span>
         </button>
     </nav>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('./sw.js').catch(function (err) {
+      console.warn('Service Worker no registrado:', err);
+    });
+  });
+}
+</script>
 </body>
 </html>
