@@ -1,5 +1,5 @@
 /* DIGAR Catalog – Service Worker (offline shell) */
-const CACHE = 'digar-v2';
+const CACHE = 'digar-v3';
 const PRECACHE = [
   './',
   './index.html',

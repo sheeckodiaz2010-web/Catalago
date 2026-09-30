@@ -1280,16 +1280,72 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             }
         }
 
-        // Catálogo: primero caché local (offline), luego Firestore cuando haya red.
-        let products = leerJSONSeguro('digar_products', []);
-        if (!Array.isArray(products)) products = [];
-        let categories = leerJSONSeguro('digar_categories', ['General', 'Dulces', 'Chicles', 'Botanas']);
-        if (!Array.isArray(categories) || !categories.length) categories = ['General', 'Dulces', 'Chicles', 'Botanas'];
+        // ---- Caché offline del catálogo (IndexedDB; localStorage solo como respaldo ligero) ----
+        const DIGAR_IDB_NAME = 'digar_catalog_db';
+        const DIGAR_IDB_STORE = 'catalog';
+        const DIGAR_IDB_KEY = 'snapshot';
+
+        function openCatalogIDB() {
+            return new Promise((resolve, reject) => {
+                if (!window.indexedDB) return reject(new Error('IndexedDB no disponible'));
+                const req = indexedDB.open(DIGAR_IDB_NAME, 1);
+                req.onupgradeneeded = () => {
+                    const db = req.result;
+                    if (!db.objectStoreNames.contains(DIGAR_IDB_STORE)) db.createObjectStore(DIGAR_IDB_STORE);
+                };
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error || new Error('No se pudo abrir IndexedDB'));
+            });
+        }
+
+        async function idbWriteCatalog(cloudProducts, cloudCategories) {
+            const db = await openCatalogIDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(DIGAR_IDB_STORE, 'readwrite');
+                tx.oncomplete = () => { db.close(); resolve(true); };
+                tx.onerror = () => { db.close(); reject(tx.error); };
+                tx.objectStore(DIGAR_IDB_STORE).put({
+                    products: cloudProducts,
+                    categories: cloudCategories,
+                    savedAt: Date.now()
+                }, DIGAR_IDB_KEY);
+            });
+        }
+
+        async function idbReadCatalog() {
+            const db = await openCatalogIDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(DIGAR_IDB_STORE, 'readonly');
+                const req = tx.objectStore(DIGAR_IDB_STORE).get(DIGAR_IDB_KEY);
+                req.onsuccess = () => { db.close(); resolve(req.result || null); };
+                req.onerror = () => { db.close(); reject(req.error); };
+            });
+        }
+
+        function stripImagesForLightCache(list) {
+            return (Array.isArray(list) ? list : []).map(p => ({
+                id: p.id, name: p.name, code: p.code, price: p.price, pieces: p.pieces,
+                category: p.category, outOfStock: !!p.outOfStock,
+                image: (p.image && String(p.image).length < 8000) ? p.image : ''
+            }));
+        }
+
+        // Catálogo en memoria: se rellena desde IDB/localStorage al arrancar y luego desde Firebase.
+        let products = [];
+        let categories = ['General', 'Dulces', 'Chicles', 'Botanas'];
+        // Intento síncrono de respaldo ligero (sin fotos grandes) para pintar algo al instante
+        (function bootstrapLightCache() {
+            const lp = leerJSONSeguro('digar_products', null);
+            const lc = leerJSONSeguro('digar_categories', null);
+            if (Array.isArray(lp) && lp.length) products = lp;
+            if (Array.isArray(lc) && lc.length) categories = lc;
+        })();
         let cart = leerJSONSeguro('digar_cart', {});
         let isAdminLoggedIn = false;
         let currentCategoryFilter = 'Todos';
         let currentSearchTerm = '';
         let catalogFromCacheOnly = false;
+        let offlineCacheReady = false;
 
         let tempSelections = {};
 
@@ -1318,7 +1374,6 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
         window.addEventListener('offline', () => { updateOfflineBanner(); });
 
         function saveToStorage() {
-            // No sincroniza ni conserva datos del POS; solo persiste el carrito del visitante.
             try {
                 localStorage.setItem('digar_cart', JSON.stringify(cart));
                 return true;
@@ -1335,15 +1390,21 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
         };
         window.applyCatalogFromFirebase = function(cloudProducts, cloudCategories, opts) {
             opts = opts || {};
-            // No borrar catálogo local con un snapshot vacío si estamos offline o es un fallo de red
             const incoming = Array.isArray(cloudProducts) ? cloudProducts : [];
-            if (!incoming.length && products.length && (opts.allowEmpty !== true) && (!navigator.onLine || opts.fromError)) {
+            // No borrar catálogo local con snapshot vacío si estamos offline / error de red
+            if (!incoming.length && products.length && opts.allowEmpty !== true && (!navigator.onLine || opts.fromError || opts.fromCache)) {
+                catalogFromCacheOnly = true;
+                updateOfflineBanner();
+                return;
+            }
+            // Tampoco pisar un caché bueno con vacío si Firebase aún no respondió bien
+            if (!incoming.length && products.length && opts.allowEmpty === true && !navigator.onLine) {
                 catalogFromCacheOnly = true;
                 updateOfflineBanner();
                 return;
             }
             products = incoming;
-            categories = Array.isArray(cloudCategories) && cloudCategories.length ? cloudCategories : ['General'];
+            categories = Array.isArray(cloudCategories) && cloudCategories.length ? cloudCategories : (categories.length ? categories : ['General']);
             if (currentCategoryFilter !== 'Todos' && !categories.includes(currentCategoryFilter)) currentCategoryFilter = 'Todos';
             catalogFromCacheOnly = !!opts.fromCache;
             renderCategoriesBar();
@@ -1359,12 +1420,53 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             };
         };
         window.cacheCatalogFromFirebase = function(cloudProducts, cloudCategories) {
+            const prods = Array.isArray(cloudProducts) ? cloudProducts : [];
+            const cats = Array.isArray(cloudCategories) ? cloudCategories : [];
+            // 1) IndexedDB (soporta fotos grandes)
+            idbWriteCatalog(prods, cats).then(() => {
+                offlineCacheReady = true;
+                console.log('[DIGAR] Catálogo guardado en IndexedDB (' + prods.length + ' productos)');
+            }).catch(e => console.warn('[DIGAR] IndexedDB no pudo guardar el catálogo:', e));
+            // 2) localStorage ligero (metadatos; si falla por cuota, se omite)
             try {
-                localStorage.setItem('digar_products', JSON.stringify(cloudProducts));
-                localStorage.setItem('digar_categories', JSON.stringify(cloudCategories));
+                localStorage.setItem('digar_categories', JSON.stringify(cats));
+                localStorage.setItem('digar_products', JSON.stringify(stripImagesForLightCache(prods)));
             } catch (e) {
-                console.warn('Catálogo de Firebase cargado, pero no se pudo actualizar su caché local.', e);
+                try {
+                    localStorage.setItem('digar_categories', JSON.stringify(cats));
+                    localStorage.removeItem('digar_products');
+                } catch (_) { /* sin espacio */ }
+                console.warn('[DIGAR] localStorage lleno; el offline usa IndexedDB.', e);
             }
+        };
+
+        // Cargar catálogo offline completo (con fotos) desde IndexedDB al arrancar
+        window.loadOfflineCatalog = async function() {
+            try {
+                const snap = await idbReadCatalog();
+                if (snap && Array.isArray(snap.products) && snap.products.length) {
+                    // Solo aplicar si aún no llegó Firebase con datos, o si estamos offline
+                    if (!navigator.onLine || !products.length || catalogFromCacheOnly) {
+                        window.applyCatalogFromFirebase(snap.products, snap.categories || categories, { fromCache: true, allowEmpty: false });
+                    } else if (products.length && products.every(p => !p.image)) {
+                        // Tenemos metadatos sin foto: completar con IDB
+                        window.applyCatalogFromFirebase(snap.products, snap.categories || categories, { fromCache: true, allowEmpty: false });
+                    }
+                    offlineCacheReady = true;
+                    return true;
+                }
+            } catch (e) {
+                console.warn('[DIGAR] No se pudo leer IndexedDB:', e);
+            }
+            // Respaldo localStorage (puede no tener fotos)
+            const lp = leerJSONSeguro('digar_products', []);
+            const lc = leerJSONSeguro('digar_categories', []);
+            if (Array.isArray(lp) && lp.length && (!products.length || !navigator.onLine)) {
+                window.applyCatalogFromFirebase(lp, Array.isArray(lc) && lc.length ? lc : categories, { fromCache: true });
+                return true;
+            }
+            updateOfflineBanner();
+            return false;
         };
 
         function ensureCatalogAdmin() {
@@ -2181,6 +2283,10 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
         renderCategoriesBar();
         renderCatalog();
         updateOfflineBanner();
+        // Recuperar catálogo completo (con fotos) desde IndexedDB; no espera a Firebase
+        if (typeof window.loadOfflineCatalog === 'function') {
+            window.loadOfflineCatalog().catch(function () {});
+        }
     </script>
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
