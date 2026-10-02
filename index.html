@@ -1348,6 +1348,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
         let offlineCacheReady = false;
 
         let tempSelections = {};
+        let expandedCardQty = {}; // id -> true cuando el selector de cantidad está visible en la tarjeta
 
         function updateOfflineBanner() {
             let bar = document.getElementById('offlineBanner');
@@ -1566,6 +1567,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
                 if (tempSelections[p.id] === undefined) {
                     tempSelections[p.id] = 1;
                 }
+                const qtyVisible = !!expandedCardQty[p.id];
                 return `
                     <div class="pcard" onclick="openProductDetail('${p.id}')">
                         <div class="pcard-img">
@@ -1576,12 +1578,12 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
                             <div class="pcard-title">${p.name}</div>
                             <div class="pcard-price">$${Number(p.price).toFixed(2)}</div>
                             <div class="pcard-actions" onclick="event.stopPropagation()">
-                                <div class="qty-selector">
+                                <div class="qty-selector" id="qty-sel-${p.id}" style="display: ${qtyVisible ? 'flex' : 'none'};">
                                     <button type="button" class="qty-btn" onclick="updateTempQty('${p.id}', -1)">-</button>
                                     <input type="number" min="1" step="1" inputmode="numeric" class="qty-display qty-input" id="qty-card-${p.id}" value="${tempSelections[p.id]}" onchange="setTempQty('${p.id}', this.value)">
                                     <button type="button" class="qty-btn" onclick="updateTempQty('${p.id}', 1)">+</button>
                                 </div>
-                                <button type="button" class="btn-add-cart" id="cardAddBtn-${p.id}" onclick="addToCartFromCard('${p.id}')">\uD83D\uDED2 Agregar</button>
+                                <button type="button" class="btn-add-cart" id="cardAddBtn-${p.id}" onclick="handleCardAddClick('${p.id}')">\uD83D\uDED2 Agregar</button>
                             </div>
                         </div>
                     </div>
@@ -1706,6 +1708,29 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             }
             saveToStorage();
             updateCartBadge();
+        }
+
+        function handleCardAddClick(id) {
+            const sel = document.getElementById(`qty-sel-${id}`);
+            if (!sel) return;
+            const isVisible = sel.style.display !== 'none';
+            if (!isVisible) {
+                // Primer toque: mostrar selector de cantidad
+                expandedCardQty[id] = true;
+                if (tempSelections[id] === undefined) tempSelections[id] = 1;
+                sel.style.display = 'flex';
+                syncQtyDisplays(id);
+                return;
+            }
+            // Segundo toque: agregar al carrito y ocultar selector
+            addToCartFromCard(id);
+            setTimeout(() => {
+                expandedCardQty[id] = false;
+                const s = document.getElementById(`qty-sel-${id}`);
+                if (s) s.style.display = 'none';
+                tempSelections[id] = 1;
+                syncQtyDisplays(id);
+            }, 1200);
         }
 
         function addToCartFromCard(id) {
@@ -1949,6 +1974,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             document.getElementById('qrModal').classList.add('active');
             cart = {};
             tempSelections = {};
+            expandedCardQty = {};
             saveToStorage();
             updateCartBadge();
         }
@@ -2139,6 +2165,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             products.splice(productIndex, 1);
             delete cart[id];
             delete tempSelections[id];
+            delete expandedCardQty[id];
             saveToStorage();
             if (await persistCatalogMutation(previousState)) {
                 renderAdminLists();
