@@ -1531,6 +1531,11 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             });
         }
 
+        // Orden alfabético por nombre (ignora acentos y mayúsculas)
+        function sortByName(list) {
+            return list.slice().sort((a, b) => (a.name || '').localeCompare(b.name || '', 'es', { sensitivity: 'base', numeric: true }));
+        }
+
         function renderCatalog() {
             refreshOpenDetail();
             const container = document.getElementById('catalogList');
@@ -1547,6 +1552,8 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
                     return nombre.includes(currentSearchTerm) || codigo.includes(currentSearchTerm);
                 });
             }
+
+            activeProducts = sortByName(activeProducts);
 
             if (activeProducts.length === 0) {
                 let mensaje;
@@ -2085,8 +2092,8 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             const activeListContainer = document.getElementById('adminActiveList');
             const stockListContainer = document.getElementById('adminStockList');
 
-            const activeProducts = products.filter(p => !p.outOfStock);
-            const stockProducts = products.filter(p => p.outOfStock);
+            const activeProducts = sortByName(products.filter(p => !p.outOfStock));
+            const stockProducts = sortByName(products.filter(p => p.outOfStock));
 
             if (activeProducts.length === 0) {
                 activeListContainer.innerHTML = '<div class="empty-state">No hay productos activos.</div>';
