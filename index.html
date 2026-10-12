@@ -1234,7 +1234,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
                     </div>
                     <div class="form-group">
                         <label>Piezas (por paquete/caja)</label>
-                        <input type="text" id="editPieces" required placeholder="Ej. 24 piezas">
+                        <input type="text" id="editPieces" placeholder="Ej. 24 piezas">
                     </div>
                     <div class="form-group">
                         <label>Categor&#xED;a</label>
@@ -1268,6 +1268,9 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
     </div>
 
     <script>
+        // Imagen de relleno para productos que llegaron del POS y aún no tienen foto
+        const SIN_FOTO = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="100%" height="100%" fill="#f1f5f9"/><text x="50%" y="50%" font-family="sans-serif" font-size="28" fill="#94a3b8" text-anchor="middle" dominant-baseline="middle">Sin foto</text></svg>');
+
         function leerJSONSeguro(clave, valorPorDefecto) {
             try {
                 const raw = localStorage.getItem(clave);
@@ -1578,8 +1581,8 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
                 return `
                     <div class="pcard" onclick="openProductDetail('${p.id}')">
                         <div class="pcard-img">
-                            <img src="${p.image}" alt="${p.name}" loading="lazy">
-                            <div class="pcard-pieces">\uD83D\uDCE6 ${p.pieces}</div>
+                            <img src="${p.image || SIN_FOTO}" alt="${p.name}" loading="lazy">
+                            ${p.pieces ? `<div class="pcard-pieces">\uD83D\uDCE6 ${p.pieces}</div>` : ''}
                         </div>
                         <div class="pcard-body">
                             <div class="pcard-title">${p.name}</div>
@@ -1609,7 +1612,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             openDetailId = id;
             if (tempSelections[id] === undefined) tempSelections[id] = 1;
             document.getElementById('pdContent').innerHTML = `
-                <div class="pd-img"><img src="${p.image}" alt="${p.name}"></div>
+                <div class="pd-img"><img src="${p.image || SIN_FOTO}" alt="${p.name}"></div>
                 <div class="pd-info">
                     <div class="pd-row">
                         <div>
@@ -1618,7 +1621,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
                         </div>
                         <span class="card-category-badge">${p.category || 'General'}</span>
                     </div>
-                    <div class="pd-meta">\uD83D\uDCE6 ${p.pieces} piezas disponibles</div>
+                    ${p.pieces ? `<div class="pd-meta">\uD83D\uDCE6 ${p.pieces} piezas disponibles</div>` : ''}
                     <div class="pd-price">$${Number(p.price).toFixed(2)}</div>
                     <div class="pd-actions">
                         <div class="qty-selector">
@@ -1836,7 +1839,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
                     html += `
                         <div class="cart-item-row" id="cart-row-${id}">
                             <div class="cart-item-info">
-                                <img src="${prod.image}" class="cart-item-img" alt="${prod.name}">
+                                <img src="${prod.image || SIN_FOTO}" class="cart-item-img" alt="${prod.name}">
                                 <div>
                                     <strong style="color: var(--primary); font-size: 0.95rem;">${prod.name}</strong><br>
                                     <small style="color: var(--gray);">C\u00F3d: ${prod.code || 'S/C'} | $${prod.price} c/u</small>
@@ -2101,7 +2104,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
                 activeListContainer.innerHTML = activeProducts.map(p => `
                     <div class="admin-item">
                         <div class="admin-item-info">
-                            <img src="${p.image}" class="admin-item-img">
+                            <img src="${p.image || SIN_FOTO}" class="admin-item-img">
                             <div class="admin-item-text">
                                 <strong>${p.name}</strong> <small>(${p.code || 'S/C'})</small><br>
                                 <span style="font-weight: 400; color: var(--gray);">$${p.price} | \uD83D\uDCE6 ${p.pieces} (${p.category || 'General'})</span>
@@ -2121,7 +2124,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
                 stockListContainer.innerHTML = stockProducts.map(p => `
                     <div class="admin-item">
                         <div class="admin-item-info">
-                            <img src="${p.image}" class="admin-item-img">
+                            <img src="${p.image || SIN_FOTO}" class="admin-item-img">
                             <div class="admin-item-text">
                                 <strong>${p.name}</strong> <small>(${p.code || 'S/C'})</small><br>
                                 <span style="font-weight: 400; color: var(--gray);">$${p.price} | \uD83D\uDCE6 ${p.pieces} (${p.category || 'General'})</span>
