@@ -1156,7 +1156,47 @@
         .cart-total { color: #374151; }
         .cart-total span:last-child { color: #e91e8c; }
         #cartModal .modal-header h3, #cartModal .close-btn { color: #374151; }
-</style>
+
+        /* ---- Parte de arriba fija + tarjetas con botón Agregar + formulario ---- */
+        .top-block { position: sticky; top: 0; z-index: 100; background: #fff; padding-bottom: 12px; }
+        .store-logo img { height: 64px; }
+        .pcard-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+        .pcard-actions .step { height: 40px; }
+        .pcard-actions .step button { width: 46px; }
+        .pcard-actions .btn-add-cart.added { background: #3fae2a !important; }
+        .in-cart { font-size: .85rem; font-weight: 700; color: #2f8f1f; }
+
+        .toast { position: fixed; left: 50%; bottom: calc(28px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%) translateY(20px); background: #1f2937; color: #fff; padding: 12px 20px; border-radius: 999px; font-size: .95rem; font-weight: 600; opacity: 0; pointer-events: none; transition: all .25s ease; z-index: 1200; max-width: 88vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        #checkoutModal { padding: 0; background: #fff; align-items: stretch; backdrop-filter: none; }
+        #checkoutModal .modal-content { max-width: none; max-height: none; height: 100%; border-radius: 0; box-shadow: none; margin-bottom: 0; animation: none; display: block; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        .co-head { display: flex; justify-content: space-between; align-items: center; padding: calc(8px + env(safe-area-inset-top, 0px)) 16px 8px; border-bottom: 4px solid; border-image: linear-gradient(90deg,#ff2fa0,#ffd400,#1ea5f0,#62c52a,#8e44d6) 1; }
+        .co-head img { height: 56px; width: auto; }
+        .co-head .close-btn { background: transparent; color: #374151; font-size: 1.5rem; width: 40px; height: 40px; }
+        .co-summary-bar { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; background: #fffaf3; border-bottom: 1px solid #f7d6e8; cursor: pointer; }
+        .co-link { color: #0b86c9; font-weight: 500; font-size: .95rem; }
+        .co-summary-bar strong { color: #374151; }
+        .co-summary { padding: 8px 20px 12px; background: #fffaf3; border-bottom: 1px solid #f7d6e8; }
+        .co-line { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; font-size: .88rem; color: #374151; text-transform: uppercase; }
+        .co-body { max-width: 560px; margin: 0 auto; padding: 4px 20px calc(36px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 6px; }
+        .co-body h2 { font-size: 1.5rem; font-weight: 700; margin: 24px 0 6px; color: #1f2937; }
+        .co-l { font-size: .95rem; font-weight: 500; color: #1f2937; margin-top: 10px; }
+        .co-body input[type=text], .co-body input[type=tel] { height: 46px; width: 100%; border: 1.5px solid #f3b6d6; border-radius: 10px; padding: 0 14px; font-size: 1rem; background: #fff; color: #1f2937; }
+        .co-body input[type=text]:focus, .co-body input[type=tel]:focus { outline: none; border-color: #1ea5f0; }
+        .co-phone { display: flex; border: 1.5px solid #f3b6d6; border-radius: 10px; overflow: hidden; height: 46px; }
+        .co-phone span { display: flex; align-items: center; padding: 0 14px; border-right: 1.5px solid #f3b6d6; white-space: nowrap; font-size: 1rem; color: #1f2937; }
+        .co-body .co-phone input[type=tel] { border: 0; border-radius: 0; flex: 1; min-width: 0; height: 100%; }
+        .co-opt { display: flex; align-items: center; gap: 14px; border: 1.5px solid #f3b6d6; border-radius: 12px; padding: 0 18px; height: 56px; cursor: pointer; color: #374151; font-weight: 500; margin-bottom: 8px; }
+        .co-opt input { width: 20px; height: 20px; accent-color: #e91e8c; flex-shrink: 0; }
+        .co-opt span { flex: 1; }
+        .co-opt svg { width: 26px; height: 26px; stroke: #6b7280; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+        .co-opt:has(input:checked) { border-color: #e91e8c; background: #fff5fa; }
+        .co-total-row { display: flex; justify-content: space-between; font-size: 1.3rem; font-weight: 700; margin: 24px 0 16px; color: #374151; }
+        .co-total-row strong { color: #e91e8c; }
+        #coSubmit { width: 100%; height: 56px; border-radius: 12px; background: #3fae2a; box-shadow: none; font-size: 1.1rem; font-weight: 500; }
+        .co-error { color: #dc2626; font-size: .95rem; font-weight: 600; text-align: center; min-height: 1.2em; margin-top: 10px; }
+    </style>
 </head>
 <body>
 
@@ -1216,8 +1256,44 @@
             </div>
             <div class="cart-footer">
                 <div id="cartTotalContainer" class="cart-total"></div>
-                <button id="checkoutBtn" class="btn-submit" onclick="sendOrderWhatsApp()" style="display: none;">Enviar Pedido por WhatsApp</button>
+                <button id="checkoutBtn" class="btn-submit" onclick="openCheckout()" style="display: none;">Ir a Finalizar el Pedido</button>
                 <button type="button" class="btn-outline" onclick="closeModals()">Seguir Comprando</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <!-- Modal: Finalizar pedido -->
+    <div id="checkoutModal" class="modal">
+        <div class="modal-content">
+            <div class="co-head">
+                <img id="coLogo" alt="DIGAR">
+                <button class="close-btn" onclick="closeModals()" aria-label="Cerrar">&#x2715;</button>
+            </div>
+            <div class="co-summary-bar" onclick="toggleCoSummary()">
+                <span class="co-link">Mostrar resumen del pedido <span id="coChev">&#x2304;</span></span>
+                <strong id="coTotalTop"></strong>
+            </div>
+            <div id="coSummary" class="co-summary" style="display:none;"></div>
+            <div class="co-body">
+                <h2>Contacto</h2>
+                <label class="co-l" for="coNombre">Nombre de la persona</label>
+                <input type="text" id="coNombre" placeholder="Ingresa tu nombre" autocomplete="name">
+                <label class="co-l" for="coNegocio">Nombre del negocio</label>
+                <input type="text" id="coNegocio" placeholder="Nombre de tu negocio" autocomplete="organization">
+                <label class="co-l" for="coTel">Tel&#xE9;fono celular</label>
+                <div class="co-phone"><span>&#x1F1F2;&#x1F1FD; +52</span><input type="tel" id="coTel" inputmode="numeric" maxlength="14" placeholder="Ingresa tu tel&#xE9;fono celular" autocomplete="tel-national"></div>
+                <label class="co-l" for="coLocalidad">Localidad</label>
+                <input type="text" id="coLocalidad" placeholder="Ciudad o localidad de donde eres" autocomplete="address-level2">
+
+                <h2>Pago</h2>
+                <label class="co-opt"><input type="radio" name="coPago" value="Efectivo"><span>Efectivo</span><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg></label>
+                <label class="co-opt"><input type="radio" name="coPago" value="Transferencia"><span>Transferencia</span><svg viewBox="0 0 24 24"><path d="M8 3L4 7l4 4"/><path d="M4 7h16"/><path d="M16 21l4-4-4-4"/><path d="M20 17H4"/></svg></label>
+
+                <div class="co-total-row"><span>Total</span><strong id="coTotal"></strong></div>
+                <button id="coSubmit" class="btn-submit" onclick="sendOrderWhatsApp()">Realizar Pedido</button>
+                <div id="coError" class="co-error"></div>
             </div>
         </div>
     </div>
@@ -1665,29 +1741,43 @@
             return list.slice().sort((a, b) => (a.name || '').localeCompare(b.name || '', 'es', { sensitivity: 'base', numeric: true }));
         }
 
-        // Control de la tarjeta: "Agregar +" o, si ya est\u00E1 en el carrito, selector - 1 +
-        function cardControlHTML(id) {
-            const q = cart[id] || 0;
-            if (q > 0) {
-                return `<div class="step">
-                    <button type="button" aria-label="Quitar uno" onclick="cardStep('${id}', -1)">&minus;</button>
-                    <input type="number" min="0" step="1" inputmode="numeric" value="${q}" onchange="cardSetQty('${id}', this.value)">
-                    <button type="button" aria-label="Agregar uno" onclick="cardStep('${id}', 1)">+</button>
-                </div>`;
-            }
-            return `<button type="button" class="btn-add-cart" onclick="cardStep('${id}', 1)">Agregar <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>`;
+        // Tarjeta: selector de cantidad + bot\u00F3n "Agregar" siempre visibles, con confirmaci\u00F3n
+        function cardControlHTML(id, justAdded) {
+            const q = tempSelections[id] || 1;
+            const enCarrito = cart[id] || 0;
+            return `<div class="step">
+                    <button type="button" aria-label="Quitar uno" onclick="updateTempQty('${id}', -1)">&minus;</button>
+                    <input type="number" min="1" step="1" inputmode="numeric" id="qty-card-${id}" value="${q}" onchange="setTempQty('${id}', this.value)">
+                    <button type="button" aria-label="Sumar uno" onclick="updateTempQty('${id}', 1)">+</button>
+                </div>
+                <button type="button" class="btn-add-cart${justAdded ? ' added' : ''}" onclick="addFromCard('${id}')">${justAdded ? '\u2713 Agregado' : 'Agregar <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>'}</button>
+                ${enCarrito > 0 ? `<div class="in-cart">\u2713 ${enCarrito} en tu carrito</div>` : ''}`;
         }
 
-        function cardSetQty(id, v) {
-            const q = parseInt(v, 10);
-            if (isNaN(q) || q < 1) { delete cart[id]; } else { cart[id] = q; }
-            saveToStorage();
+        function refreshCard(id, justAdded) {
             const box = document.querySelector('.pcard[data-id="' + id + '"] .pcard-actions');
-            if (box) { box.innerHTML = cardControlHTML(id); } else { renderCatalog(); return; }
-            updateCartBadge();
+            if (box) box.innerHTML = cardControlHTML(id, justAdded);
         }
 
-        function cardStep(id, d) { cardSetQty(id, (cart[id] || 0) + d); }
+        let toastTimer = null;
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            if (!t) return;
+            t.textContent = msg;
+            t.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+        }
+
+        function addFromCard(id) {
+            const prod = products.find(p => p.id === id);
+            const qty = tempSelections[id] || 1;
+            addToCart(id);
+            tempSelections[id] = 1;
+            refreshCard(id, true);
+            showToast('\u2713 Agregado: ' + qty + ' x ' + (prod ? prod.name : 'producto'));
+            setTimeout(() => refreshCard(id, false), 1600);
+        }
 
         function renderCatalog() {
             refreshOpenDetail();
@@ -2024,31 +2114,110 @@
 
         const WHATSAPP_PEDIDOS = '528611261265';
 
-        function sendOrderWhatsApp() {
-            if (!products.length) {
-                alert('El cat\u00E1logo a\u00FAn se est\u00E1 cargando. Intenta de nuevo en unos segundos.');
-                return;
-            }
+        function cartSummary() {
             pruneCart();
-
             let total = 0;
             const lineas = [];
             for (const id in cart) {
                 const prod = products.find(p => p.id === id);
                 if (!prod) continue;
-                const subtotal = Number(prod.price) * cart[id];
-                total += subtotal;
-                lineas.push('\u2022 ' + cart[id] + ' x ' + prod.name + (prod.code ? ' (C\u00F3d: ' + prod.code + ')' : '') + ' \u2014 $' + subtotal.toFixed(2));
+                const sub = Number(prod.price) * cart[id];
+                total += sub;
+                lineas.push({ qty: cart[id], name: prod.name, code: prod.code, sub });
             }
+            return { lineas, total };
+        }
 
-            if (lineas.length === 0) {
+        function loadCliente() {
+            try { return JSON.parse(localStorage.getItem('digar_cliente')) || {}; } catch (e) { return {}; }
+        }
+
+        function toggleCoSummary() {
+            const box = document.getElementById('coSummary');
+            const open = box.style.display === 'none';
+            box.style.display = open ? 'block' : 'none';
+            document.getElementById('coChev').style.display = 'inline-block';
+            document.getElementById('coChev').style.transform = open ? 'rotate(180deg)' : '';
+        }
+
+        function openCheckout() {
+            if (!products.length) {
+                alert('El cat\u00E1logo a\u00FAn se est\u00E1 cargando. Intenta de nuevo en unos segundos.');
+                return;
+            }
+            const { lineas, total } = cartSummary();
+            if (!lineas.length) {
                 updateCartBadge();
                 openCartModal();
                 alert('Tu carrito no tiene productos disponibles.');
                 return;
             }
+            closeModals();
+            const t = '$' + total.toFixed(2);
+            document.getElementById('coTotal').textContent = t;
+            document.getElementById('coTotalTop').textContent = t;
+            document.getElementById('coSummary').innerHTML = lineas.map(l => `<div class="co-line"><span>${l.qty} x ${l.name}</span><span>$${l.sub.toFixed(2)}</span></div>`).join('');
+            const logo = document.querySelector('.store-logo img');
+            const cl = document.getElementById('coLogo');
+            if (logo && cl) cl.src = logo.src;
+            const c = loadCliente();
+            const setIfEmpty = (id, v) => { const el = document.getElementById(id); if (el && !el.value && v) el.value = v; };
+            setIfEmpty('coNombre', c.nombre);
+            setIfEmpty('coNegocio', c.negocio);
+            setIfEmpty('coTel', c.tel);
+            setIfEmpty('coLocalidad', c.localidad);
+            if (c.pago) {
+                const r = document.querySelector('input[name="coPago"][value="' + c.pago + '"]');
+                if (r) r.checked = true;
+            }
+            document.getElementById('coError').textContent = '';
+            const modal = document.getElementById('checkoutModal');
+            modal.classList.add('active');
+            const sc = modal.querySelector('.modal-content');
+            if (sc) sc.scrollTop = 0;
+        }
 
-            const mensaje = '*Nuevo pedido DIGAR*\n\n' + lineas.join('\n') + '\n\n*Total: $' + total.toFixed(2) + '*';
+        function sendOrderWhatsApp() {
+            const err = document.getElementById('coError');
+            const val = id => document.getElementById(id).value.trim();
+            const nombre = val('coNombre');
+            const negocio = val('coNegocio');
+            const localidad = val('coLocalidad');
+            let tel = document.getElementById('coTel').value.replace(/\D/g, '');
+            if (tel.length === 12 && tel.indexOf('52') === 0) tel = tel.slice(2);
+            const pagoEl = document.querySelector('input[name="coPago"]:checked');
+
+            const faltan = [];
+            if (!nombre) faltan.push('tu nombre');
+            if (!negocio) faltan.push('el nombre de tu negocio');
+            if (tel.length !== 10) faltan.push('tu tel\u00E9fono (10 d\u00EDgitos)');
+            if (!localidad) faltan.push('tu localidad');
+            if (!pagoEl) faltan.push('la forma de pago');
+            if (faltan.length) {
+                err.textContent = 'Falta: ' + faltan.join(', ') + '.';
+                err.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                return;
+            }
+
+            const { lineas, total } = cartSummary();
+            if (!lineas.length) {
+                closeModals();
+                updateCartBadge();
+                alert('Tu carrito no tiene productos disponibles.');
+                return;
+            }
+
+            try { localStorage.setItem('digar_cliente', JSON.stringify({ nombre, negocio, tel, localidad, pago: pagoEl.value })); } catch (e) { /* sin almacenamiento */ }
+
+            const detalle = lineas.map(l => '\u2022 ' + l.qty + ' x ' + l.name + (l.code ? ' (C\u00F3d: ' + l.code + ')' : '') + ' \u2014 $' + l.sub.toFixed(2)).join('\n');
+            const mensaje = '*Nuevo pedido DIGAR*\n\n' +
+                '*Nombre:* ' + nombre + '\n' +
+                '*Negocio:* ' + negocio + '\n' +
+                '*Tel\u00E9fono:* +52 ' + tel + '\n' +
+                '*Localidad:* ' + localidad + '\n' +
+                '*Pago:* ' + pagoEl.value + '\n\n' +
+                '*Pedido:*\n' + detalle + '\n\n' +
+                '*Total: $' + total.toFixed(2) + '*';
             const url = 'https://wa.me/' + WHATSAPP_PEDIDOS + '?text=' + encodeURIComponent(mensaje);
 
             // Se muestra "Pedido enviado" y se vac\u00EDa el carrito
