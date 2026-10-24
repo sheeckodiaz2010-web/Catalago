@@ -1183,6 +1183,8 @@
         .co-body h2 { font-size: 1.5rem; font-weight: 700; margin: 24px 0 6px; color: #1f2937; }
         .co-l { font-size: .95rem; font-weight: 500; color: #1f2937; margin-top: 10px; }
         .co-body input[type=text], .co-body input[type=tel] { height: 46px; width: 100%; border: 1.5px solid #f3b6d6; border-radius: 10px; padding: 0 14px; font-size: 1rem; background: #fff; color: #1f2937; }
+        .co-body select { height: 46px; width: 100%; border: 1.5px solid #f3b6d6; border-radius: 10px; padding: 0 14px; font-size: 1rem; background: #fff; color: #1f2937; }
+        .co-body select:focus { outline: none; border-color: #1ea5f0; }
         .co-body input[type=text]:focus, .co-body input[type=tel]:focus { outline: none; border-color: #1ea5f0; }
         .co-phone { display: flex; border: 1.5px solid #f3b6d6; border-radius: 10px; overflow: hidden; height: 46px; }
         .co-phone span { display: flex; align-items: center; padding: 0 14px; border-right: 1.5px solid #f3b6d6; white-space: nowrap; font-size: 1rem; color: #1f2937; }
@@ -1284,8 +1286,18 @@
                 <input type="text" id="coNegocio" placeholder="Nombre de tu negocio" autocomplete="organization">
                 <label class="co-l" for="coTel">Tel&#xE9;fono celular</label>
                 <div class="co-phone"><span>&#x1F1F2;&#x1F1FD; +52</span><input type="tel" id="coTel" inputmode="numeric" maxlength="14" placeholder="Ingresa tu tel&#xE9;fono celular" autocomplete="tel-national"></div>
-                <label class="co-l" for="coLocalidad">Localidad</label>
-                <input type="text" id="coLocalidad" placeholder="Ciudad o localidad de donde eres" autocomplete="address-level2">
+                <label class="co-l" for="coLocalidad">Ciudad</label>
+                <select id="coLocalidad" autocomplete="address-level2">
+                    <option value="">Selecciona tu ciudad</option>
+                    <option value="Sabinas">Sabinas</option>
+                    <option value="Agujita">Agujita</option>
+                    <option value="Cloete">Cloete</option>
+                    <option value="Rosita">Rosita</option>
+                    <option value="Palau">Palau</option>
+                    <option value="M&#xFA;zquiz">M&#xFA;zquiz</option>
+                </select>
+                <label class="co-l" for="coColonia">Colonia</label>
+                <input type="text" id="coColonia" placeholder="Colonia donde est&#xE1; tu negocio" autocomplete="address-level3">
 
                 <h2>Pago</h2>
                 <label class="co-opt"><input type="radio" name="coPago" value="Efectivo"><span>Efectivo</span><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg></label>
@@ -2166,6 +2178,7 @@
             setIfEmpty('coNegocio', c.negocio);
             setIfEmpty('coTel', c.tel);
             setIfEmpty('coLocalidad', c.localidad);
+            setIfEmpty('coColonia', c.colonia);
             if (c.pago) {
                 const r = document.querySelector('input[name="coPago"][value="' + c.pago + '"]');
                 if (r) r.checked = true;
@@ -2183,6 +2196,7 @@
             const nombre = val('coNombre');
             const negocio = val('coNegocio');
             const localidad = val('coLocalidad');
+            const colonia = val('coColonia');
             let tel = document.getElementById('coTel').value.replace(/\D/g, '');
             if (tel.length === 12 && tel.indexOf('52') === 0) tel = tel.slice(2);
             const pagoEl = document.querySelector('input[name="coPago"]:checked');
@@ -2191,7 +2205,8 @@
             if (!nombre) faltan.push('tu nombre');
             if (!negocio) faltan.push('el nombre de tu negocio');
             if (tel.length !== 10) faltan.push('tu tel\u00E9fono (10 d\u00EDgitos)');
-            if (!localidad) faltan.push('tu localidad');
+            if (!localidad) faltan.push('tu ciudad');
+            if (!colonia) faltan.push('tu colonia');
             if (!pagoEl) faltan.push('la forma de pago');
             if (faltan.length) {
                 err.textContent = 'Falta: ' + faltan.join(', ') + '.';
@@ -2207,14 +2222,15 @@
                 return;
             }
 
-            try { localStorage.setItem('digar_cliente', JSON.stringify({ nombre, negocio, tel, localidad, pago: pagoEl.value })); } catch (e) { /* sin almacenamiento */ }
+            try { localStorage.setItem('digar_cliente', JSON.stringify({ nombre, negocio, tel, localidad, colonia, pago: pagoEl.value })); } catch (e) { /* sin almacenamiento */ }
 
             const detalle = lineas.map(l => '\u2022 ' + l.qty + ' x ' + l.name + (l.code ? ' (C\u00F3d: ' + l.code + ')' : '') + ' \u2014 $' + l.sub.toFixed(2)).join('\n');
             const mensaje = '*Nuevo pedido DIGAR*\n\n' +
                 '*Nombre:* ' + nombre + '\n' +
                 '*Negocio:* ' + negocio + '\n' +
                 '*Tel\u00E9fono:* +52 ' + tel + '\n' +
-                '*Localidad:* ' + localidad + '\n' +
+                '*Ciudad:* ' + localidad + '\n' +
+                '*Colonia:* ' + colonia + '\n' +
                 '*Pago:* ' + pagoEl.value + '\n\n' +
                 '*Pedido:*\n' + detalle + '\n\n' +
                 '*Total: $' + total.toFixed(2) + '*';
