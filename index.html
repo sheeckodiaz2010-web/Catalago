@@ -262,7 +262,6 @@
             bottom: 14px;
             left: 14px;
             background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(8px);
             color: white;
             padding: 7px 14px;
             border-radius: 10px;
@@ -569,8 +568,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(4px);
+            background: rgba(15, 23, 42, 0.7);
             justify-content: center;
             align-items: center;
             z-index: 1000;
@@ -913,9 +911,7 @@
             display: flex;
             justify-content: space-around;
             align-items: stretch;
-            background: rgba(255, 255, 255, 0.96);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            background: rgba(255, 255, 255, 0.99);
             border-top: 1px solid var(--border);
             padding-bottom: env(safe-area-inset-bottom, 0px);
             box-shadow: 0 -4px 24px rgba(15, 23, 42, 0.06);
@@ -1032,6 +1028,8 @@
 
         .pcard {
             border-radius: 14px;
+            content-visibility: auto;
+            contain-intrinsic-size: auto 290px;
         }
 
         .pcard-body {
@@ -1483,6 +1481,7 @@
     <script>
         // Imagen de relleno para productos que llegaron del POS y aún no tienen foto
         const SIN_FOTO = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="100%" height="100%" fill="#f1f5f9"/><text x="50%" y="50%" font-family="sans-serif" font-size="28" fill="#94a3b8" text-anchor="middle" dominant-baseline="middle">Sin foto</text></svg>');
+        const esc = t => String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 
         function leerJSONSeguro(clave, valorPorDefecto) {
             try {
@@ -1577,18 +1576,53 @@
                 if (header && header.parentNode) header.parentNode.insertBefore(bar, header.nextSibling);
                 else document.body.prepend(bar);
             }
-            const offline = !navigator.onLine;
+            const offline = !navigator.onLine || !reachable;
             if (offline) {
                 bar.style.display = 'block';
                 bar.textContent = products.length
-                    ? 'Sin conexión — mostrando catálogo guardado en este dispositivo'
+                    ? ('Sin conexión — catálogo guardado' + lastSyncText() + '. Los precios pueden haber cambiado.')
                     : 'Sin conexión — abre la app con internet una vez para guardar el catálogo';
             } else {
                 bar.style.display = 'none';
             }
         }
-        window.addEventListener('online', () => { updateOfflineBanner(); });
-        window.addEventListener('offline', () => { updateOfflineBanner(); });
+        var reachable = true;
+        function lastSyncText() {
+            let t = 0;
+            try { t = Number(localStorage.getItem('digar_last_sync')) || 0; } catch (e) {}
+            if (!t) return '';
+            const d = new Date(t);
+            const p2 = n => String(n).padStart(2, '0');
+            return ' (actualizado ' + p2(d.getDate()) + '/' + p2(d.getMonth() + 1) + ' ' + p2(d.getHours()) + ':' + p2(d.getMinutes()) + ')';
+        }
+        window.markCatalogSynced = function() {
+            try { localStorage.setItem('digar_last_sync', String(Date.now())); } catch (e) {}
+        };
+        let reachChecking = false;
+        async function checkReachability() {
+            if (reachChecking) return;
+            reachChecking = true;
+            const was = reachable;
+            if (!navigator.onLine) {
+                reachable = false;
+            } else {
+                const ctrl = new AbortController();
+                const tm = setTimeout(() => ctrl.abort(), 4000);
+                try {
+                    await fetch('./manifest.webmanifest?__ping=' + Date.now(), { cache: 'no-store', signal: ctrl.signal });
+                    reachable = true;
+                } catch (e) { reachable = false; }
+                clearTimeout(tm);
+            }
+            reachChecking = false;
+            updateOfflineBanner();
+            if (!was && reachable && typeof showToast === 'function') showToast('\u2713 Conexi\u00F3n restaurada');
+        }
+        window.addEventListener('online', checkReachability);
+        window.addEventListener('offline', checkReachability);
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) checkReachability(); });
+        setInterval(() => { if (!document.hidden) checkReachability(); }, 30000);
+        setTimeout(() => { if (!products.length) { window.catalogLoadFailed = true; if (typeof renderCatalog === 'function') renderCatalog(); } }, 12000);
 
         function saveToStorage() {
             try {
@@ -1737,14 +1771,15 @@
 
         function handleSearchInput(value) {
             currentSearchTerm = (value || '').trim().toLowerCase();
-            renderCatalog();
+            clearTimeout(window.__searchT);
+            window.__searchT = setTimeout(renderCatalog, 150);
         }
 
         function updateCategorySelects() {
             const selects = [document.getElementById('prodCategory'), document.getElementById('editCategory')];
             selects.forEach(select => {
                 if (!select) return;
-                select.innerHTML = categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+                select.innerHTML = categories.map(cat => `<option value="${esc(cat)}">${esc(cat)}</option>`).join('');
             });
         }
 
@@ -1816,27 +1851,59 @@
                     mensaje = 'No se encontraron productos que coincidan con tu b\u00FAsqueda.';
                 } else if (!products.length && !navigator.onLine) {
                     mensaje = 'Sin conexi\u00F3n y a\u00FAn no hay cat\u00E1logo guardado. Con\u00E9ctate a internet una vez para descargarlo.';
+                } else if (!products.length && window.catalogLoadFailed) {
+                    mensaje = 'No se pudo cargar el cat\u00E1logo. <br><button type="button" class="btn-add-cart" style="margin-top:12px;width:auto;padding:10px 18px" onclick="location.reload()">Reintentar</button>';
                 } else if (!products.length) {
                     mensaje = 'Cargando cat\u00E1logo\u2026';
                 } else {
                     mensaje = 'No hay productos disponibles en esta categor\u00EDa.';
                 }
+                if (window.__cardCache) window.__cardCache.clear();
                 container.innerHTML = `<div class="empty-state">${mensaje}</div>`;
                 return;
             }
 
-            container.innerHTML = activeProducts.map(p => `
-                    <div class="pcard" data-id="${p.id}" onclick="openProductDetail('${p.id}')">
+            if (!container.__delegated) {
+                container.__delegated = true;
+                container.addEventListener('click', e => {
+                    const card = e.target.closest('.pcard');
+                    if (card && !e.target.closest('.pcard-actions')) openProductDetail(card.dataset.id);
+                });
+            }
+            const cardCache = window.__cardCache || (window.__cardCache = new Map());
+            if (container.querySelector('.empty-state')) container.innerHTML = '';
+            const keep = new Set();
+            let prev = null;
+            activeProducts.forEach(p => {
+                keep.add(String(p.id));
+                const img = p.image || '';
+                const sig = [p.name, p.price, img.length, img.slice(-48), cardControlHTML(p.id)].join('|');
+                const entry = cardCache.get(p.id);
+                let el = entry && entry.el.parentNode === container ? entry.el : null;
+                if (!el || entry.sig !== sig) {
+                    const tpl = document.createElement('template');
+                    tpl.innerHTML = `
+                    <div class="pcard" data-id="${esc(p.id)}">
                         <div class="pcard-img">
-                            <img src="${p.image || SIN_FOTO}" alt="${p.name}" loading="lazy">
+                            <img src="${img || SIN_FOTO}" alt="${esc(p.name)}" loading="lazy" decoding="async">
                         </div>
                         <div class="pcard-body">
-                            <div class="pcard-title">${p.name}</div>
+                            <div class="pcard-title">${esc(p.name)}</div>
                             <div class="pcard-price">$${Number(p.price).toFixed(2)}</div>
                             <div class="pcard-actions" onclick="event.stopPropagation()">${cardControlHTML(p.id)}</div>
                         </div>
-                    </div>
-                `).join('');
+                    </div>`.trim();
+                    const n = tpl.content.firstElementChild;
+                    if (el) container.replaceChild(n, el);
+                    el = n;
+                    cardCache.set(p.id, { el, sig });
+                }
+                const expected = prev ? prev.nextElementSibling : container.firstElementChild;
+                if (expected !== el) container.insertBefore(el, expected);
+                prev = el;
+            });
+            Array.from(container.children).forEach(ch => { if (!keep.has(ch.dataset.id)) ch.remove(); });
+            cardCache.forEach((v, k) => { if (!keep.has(String(k))) cardCache.delete(k); });
 
             updateCartBadge();
         }
@@ -1850,11 +1917,11 @@
             openDetailId = id;
             if (tempSelections[id] === undefined) tempSelections[id] = 1;
             document.getElementById('pdContent').innerHTML = `
-                <div class="pd-img"><img src="${p.image || SIN_FOTO}" alt="${p.name}"></div>
+                <div class="pd-img"><img src="${p.image || SIN_FOTO}" alt="${esc(p.name)}"></div>
                 <div class="pd-info">
                     <div class="pd-row">
                         <div>
-                            <div class="pd-title">${p.name}</div>
+                            <div class="pd-title">${esc(p.name)}</div>
                             <div class="card-code-text">C\u00F3d: ${p.code || 'S/C'}</div>
                         </div>
                         <span class="card-category-badge">${p.category || 'General'}</span>
@@ -2073,10 +2140,10 @@
                     total += subtotal;
                     html += `
                         <div class="cart-item-row" id="cart-row-${id}">
-                            <div class="ci-img"><img src="${prod.image || SIN_FOTO}" alt="${prod.name}"></div>
+                            <div class="ci-img"><img src="${prod.image || SIN_FOTO}" alt="${esc(prod.name)}"></div>
                             <div class="ci-main">
                                 <div class="ci-top">
-                                    <div class="ci-name">${prod.name}<div class="ci-unit">$${Number(prod.price).toFixed(2)}</div></div>
+                                    <div class="ci-name">${esc(prod.name)}<div class="ci-unit">$${Number(prod.price).toFixed(2)}</div></div>
                                     <div class="ci-sub">$${subtotal.toFixed(2)}</div>
                                 </div>
                                 <div class="ci-ctrl">
@@ -2168,7 +2235,7 @@
             const t = '$' + total.toFixed(2);
             document.getElementById('coTotal').textContent = t;
             document.getElementById('coTotalTop').textContent = t;
-            document.getElementById('coSummary').innerHTML = lineas.map(l => `<div class="co-line"><span>${l.qty} x ${l.name}</span><span>$${l.sub.toFixed(2)}</span></div>`).join('');
+            document.getElementById('coSummary').innerHTML = lineas.map(l => `<div class="co-line"><span>${l.qty} x ${esc(l.name)}</span><span>$${l.sub.toFixed(2)}</span></div>`).join('');
             const logo = document.querySelector('.store-logo img');
             const cl = document.getElementById('coLogo');
             if (logo && cl) cl.src = logo.src;
@@ -2366,9 +2433,9 @@
                 activeListContainer.innerHTML = activeProducts.map(p => `
                     <div class="admin-item">
                         <div class="admin-item-info">
-                            <img src="${p.image || SIN_FOTO}" class="admin-item-img">
+                            <img src="${p.image || SIN_FOTO}" class="admin-item-img" loading="lazy" decoding="async">
                             <div class="admin-item-text">
-                                <strong>${p.name}</strong> <small>(${p.code || 'S/C'})</small><br>
+                                <strong>${esc(p.name)}</strong> <small>(${esc(p.code || 'S/C')})</small><br>
                                 <span style="font-weight: 400; color: var(--gray);">$${p.price} | \uD83D\uDCE6 ${p.pieces} (${p.category || 'General'})</span>
                             </div>
                         </div>
@@ -2386,9 +2453,9 @@
                 stockListContainer.innerHTML = stockProducts.map(p => `
                     <div class="admin-item">
                         <div class="admin-item-info">
-                            <img src="${p.image || SIN_FOTO}" class="admin-item-img">
+                            <img src="${p.image || SIN_FOTO}" class="admin-item-img" loading="lazy" decoding="async">
                             <div class="admin-item-text">
-                                <strong>${p.name}</strong> <small>(${p.code || 'S/C'})</small><br>
+                                <strong>${esc(p.name)}</strong> <small>(${esc(p.code || 'S/C')})</small><br>
                                 <span style="font-weight: 400; color: var(--gray);">$${p.price} | \uD83D\uDCE6 ${p.pieces} (${p.category || 'General'})</span>
                             </div>
                         </div>
@@ -2519,10 +2586,10 @@
             const list = document.getElementById('categoryAdminList');
             list.innerHTML = categories.map(cat => `
                 <div class="admin-item">
-                    <span style="font-weight: 700; color: var(--primary);">${cat}</span>
+                    <span style="font-weight: 700; color: var(--primary);">${esc(cat)}</span>
                     <div class="admin-item-actions">
-                        <button class="btn-action btn-edit" onclick="renameCategory('${cat}')">Renombrar</button>
-                        ${categories.length > 1 ? `<button class="btn-action btn-delete" onclick="deleteCategory('${cat}')">Borrar</button>` : ''}
+                        <button class="btn-action btn-edit" data-cat="${esc(cat)}" onclick="renameCategory(this.dataset.cat)">Renombrar</button>
+                        ${categories.length > 1 ? `<button class="btn-action btn-delete" data-cat="${esc(cat)}" onclick="deleteCategory(this.dataset.cat)">Borrar</button>` : ''}
                     </div>
                 </div>
             `).join('');
@@ -2807,12 +2874,15 @@
             const config = configSnapshot ? configSnapshot.data() : {};
             const cloudProducts = snapshot.docs.filter(d => d.id !== 'catalogConfig').map(d => publicProjection(d.data()));
             const cloudCategories = normalizedCategories(config.categories || cloudProducts.map(p => p.category));
+            window.catalogLoadFailed = false;
+            if (!snapshot.metadata.fromCache && window.markCatalogSynced) window.markCatalogSynced();
             window.applyCatalogFromFirebase(cloudProducts, cloudCategories, { allowEmpty: true });
             // An empty initial collection must not erase possible local migration data.
             if (cloudProducts.length && !migrationInProgress) window.cacheCatalogFromFirebase(cloudProducts, cloudCategories);
         }, error => {
             console.error('No se pudo leer el catálogo público de Firestore:', error);
             // Mantener lo que haya en localStorage / memoria
+            window.catalogLoadFailed = true;
             window.applyCatalogFromFirebase(products, categories, { fromError: true, fromCache: true });
         });
     </script>
@@ -2837,9 +2907,28 @@
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js').catch(function (err) {
-      console.warn('Service Worker no registrado:', err);
-    });
+    var userReload = false;
+    navigator.serviceWorker.register('./sw.js').then(function (reg) {
+      function promptUpdate(w) {
+        if (document.getElementById('swUpdate')) return;
+        var b = document.createElement('div');
+        b.id = 'swUpdate';
+        b.style.cssText = 'position:fixed;left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:3000;background:#1e293b;color:#fff;padding:12px 14px;border-radius:12px;display:flex;gap:10px;align-items:center;justify-content:space-between;font-size:14px;box-shadow:0 6px 24px rgba(0,0,0,.25)';
+        b.innerHTML = '<span>Nueva versi\u00F3n disponible</span><button type="button" style="background:#fff;color:#1e293b;border:0;border-radius:8px;padding:8px 14px;font-weight:700">Actualizar</button>';
+        b.querySelector('button').onclick = function () { userReload = true; w.postMessage('SKIP_WAITING'); };
+        document.body.appendChild(b);
+      }
+      if (reg.waiting && navigator.serviceWorker.controller) promptUpdate(reg.waiting);
+      reg.addEventListener('updatefound', function () {
+        var w = reg.installing;
+        if (!w) return;
+        w.addEventListener('statechange', function () {
+          if (w.state === 'installed' && navigator.serviceWorker.controller) promptUpdate(w);
+        });
+      });
+      setInterval(function () { reg.update().catch(function () {}); }, 3600000);
+    }).catch(function (err) { console.warn('Service Worker no registrado:', err); });
+    navigator.serviceWorker.addEventListener('controllerchange', function () { if (userReload) location.reload(); });
   });
 }
 </script>
