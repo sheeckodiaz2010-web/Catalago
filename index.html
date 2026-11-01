@@ -558,7 +558,10 @@
         .pd-meta { font-size: 0.9rem; color: var(--gray); font-weight: 600; }
         .pd-price { font-size: 1.9rem; font-weight: 800; color: var(--accent); letter-spacing: -0.5px; }
         .pd-actions { display: flex; gap: 12px; align-items: center; margin-top: 6px; }
-        .pd-actions .btn-add-cart { flex: 1; justify-content: center; }
+        .pd-actions .btn-add-cart { flex: 1; justify-content: center; height: 60px; font-size: 1.05rem; }
+        .pd-actions .qty-selector { flex: 0 0 auto; border-radius: 14px; }
+        .pd-actions .qty-btn { width: 62px; height: 62px; font-size: 1.7rem; }
+        .pd-actions .qty-input { width: 74px; height: 62px; font-size: 1.4rem; }
 
         /* Modales */
         .modal {
@@ -1910,10 +1913,12 @@
 
         // ---- Detalle de producto (foto grande + flecha para regresar)
         let openDetailId = null;
+        let savedCatalogScrollY = 0;
 
         function openProductDetail(id) {
             const p = products.find(x => x.id === id);
             if (!p) return;
+            if (openDetailId === null) savedCatalogScrollY = window.scrollY || document.documentElement.scrollTop || 0;
             openDetailId = id;
             if (tempSelections[id] === undefined) tempSelections[id] = 1;
             document.getElementById('pdContent').innerHTML = `
@@ -1948,6 +1953,8 @@
         }
 
         function hideProductDetail() {
+            const wasOpen = openDetailId !== null;
+            const y = savedCatalogScrollY;
             openDetailId = null;
             const el = document.getElementById('productDetail');
             if (el) el.style.display = 'none';
@@ -1955,6 +1962,10 @@
             const bn = document.getElementById('bottomNav');
             if (bn) bn.style.display = '';
             setBottomNavActive('navHome');
+            if (wasOpen) {
+                window.scrollTo(0, y);
+                requestAnimationFrame(() => window.scrollTo(0, y));
+            }
         }
 
         function closeProductDetail() {
@@ -2101,6 +2112,7 @@
 
         function navGoHome() {
             closeModals();
+            savedCatalogScrollY = 0; // Inicio lleva arriba a propósito
             hideProductDetail();
             document.querySelectorAll('.bottom-nav-btn').forEach(b => b.classList.remove('active'));
             const home = document.getElementById('navHome');
