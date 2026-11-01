@@ -2671,6 +2671,9 @@
         let db;
         try {
             db = initializeFirestore(app, {
+                // Datos móviles: muchos operadores/proxies bloquean el canal WebSocket de Firestore.
+                // Esto detecta automáticamente y usa long-polling cuando hace falta.
+                experimentalAutoDetectLongPolling: true,
                 localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
             });
         } catch (e) {
