@@ -1637,20 +1637,26 @@ body{background:#f6f7fa!important;color:#172337!important;font-family:system-ui,
             try { localStorage.setItem('digar_last_sync', String(Date.now())); } catch (e) {}
         };
         let reachChecking = false;
+        let reachFailures = 0;
         async function checkReachability() {
             if (reachChecking) return;
             reachChecking = true;
             const was = reachable;
             if (!navigator.onLine) {
                 reachable = false;
+                reachFailures = 0;
             } else {
                 const ctrl = new AbortController();
-                const tm = setTimeout(() => ctrl.abort(), 4000);
+                const tm = setTimeout(() => ctrl.abort(), 10000);
+                let ok = false;
                 try {
                     const response = await fetch('./manifest.webmanifest?__ping=' + Date.now(), { cache: 'no-store', signal: ctrl.signal });
-                    reachable = response.ok;
-                } catch (e) { reachable = false; }
+                    ok = response.ok;
+                } catch (e) { ok = false; }
                 clearTimeout(tm);
+                // Un solo fallo (red móvil lenta) no basta para mostrar "Sin conexión"
+                if (ok) { reachFailures = 0; reachable = true; }
+                else { reachFailures++; if (reachFailures >= 2) reachable = false; }
             }
             reachChecking = false;
             updateOfflineBanner();
@@ -1660,7 +1666,7 @@ body{background:#f6f7fa!important;color:#172337!important;font-family:system-ui,
         window.addEventListener('offline', checkReachability);
         document.addEventListener('visibilitychange', () => { if (!document.hidden) checkReachability(); });
         setInterval(() => { if (!document.hidden) checkReachability(); }, 30000);
-        setTimeout(() => { if (!products.length) { window.catalogLoadFailed = true; if (typeof renderCatalog === 'function') renderCatalog(); } }, 12000);
+        setTimeout(() => { if (!products.length) { window.catalogLoadFailed = true; if (typeof renderCatalog === 'function') renderCatalog(); } }, 25000);
 
         function saveToStorage() {
             try {
@@ -2703,9 +2709,9 @@ body{background:#f6f7fa!important;color:#172337!important;font-family:system-ui,
         let db;
         try {
             db = initializeFirestore(app, {
-                // Datos móviles: muchos operadores/proxies bloquean el canal WebSocket de Firestore.
-                // Esto detecta automáticamente y usa long-polling cuando hace falta.
-                experimentalAutoDetectLongPolling: true,
+                // Datos móviles: muchos operadores/proxies bloquean o degradan WebSocket de Firestore.
+                // Long-polling fijo evita esperar a que WebSocket falle.
+                experimentalForceLongPolling: true,
                 localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
             });
         } catch (e) {

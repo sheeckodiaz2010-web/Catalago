@@ -1,5 +1,5 @@
 /* DIGAR: instalación completa y cachés limitadas a esta aplicación. */
-const CACHE = 'digar-v7';
+const CACHE = 'digar-v8';
 const SDK_CACHE = 'digar-sdk-v1';
 const NAV_TIMEOUT = 3000;
 const INDEX = new URL('./index.html', self.registration.scope).href;
@@ -11,7 +11,12 @@ const PRECACHE = [
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(PRECACHE)));
+  // Precache tolerante: un archivo que falle no tumba toda la instalación.
+  event.waitUntil(caches.open(CACHE).then((cache) => Promise.all(
+    PRECACHE.map((url) => fetch(url, { cache: 'reload' })
+      .then((res) => { if (res.ok) return cache.put(url, res); })
+      .catch(() => {}))
+  )));
   // La página puede solicitar la actualización cuando el usuario esté listo.
 });
 
