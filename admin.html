@@ -2517,7 +2517,7 @@ body>.panel-fab{display:none!important}body.admin-authenticated>.panel-fab{displ
             if (activeProducts.length === 0) {
                 activeListContainer.innerHTML = '<tr><td colspan="6" class="empty-state">No hay productos activos.</td></tr>';
             } else {
-                activeListContainer.innerHTML = activeProducts.map(p => rowHTML(p, `<button class="btn-action btn-edit" onclick="openEditModal('${p.id}')">Editar</button> <button class="btn-action btn-delete" onclick="moveToStock('${p.id}')">Quitar</button>`)).join('');
+                activeListContainer.innerHTML = activeProducts.map(p => rowHTML(p, `<button class="btn-action btn-edit" onclick="openEditModal('${p.id}')">Editar</button> <button class="btn-action btn-delete" onclick="moveToStock('${p.id}')">Quitar</button> <button class="btn-action btn-delete" onclick="deleteProduct('${p.id}')">Eliminar</button>`)).join('');
             }
 
             if (stockProducts.length === 0) {
@@ -2908,17 +2908,40 @@ body>.panel-fab{display:none!important}body.admin-authenticated>.panel-fab{displ
             finally { adminInitialization = null; }
         }
         window.signInCatalogAdmin = async function(email, password) {
+            let credential;
             try {
-                const credential = await signInWithEmailAndPassword(auth, email, password);
-                window.setCatalogAdminAuthState(credential.user);
-                await initializeAdminCatalog();
-                document.getElementById('loginModal').classList.remove('active');
-                document.getElementById('configModal').classList.add('active');
+                credential = await signInWithEmailAndPassword(auth, email, password);
             } catch (error) {
-                console.error('Firebase admin sign-in / catalog initialization failed:', error);
-                alert('No se pudo iniciar sesión o preparar el catálogo. Verifica el correo, la contraseña y tu conexión.\n\n[Diagnóstico] ' + (error.code || '') + ' ' + (error.message || error));
+                console.error('Login de administrador falló:', error);
+                alert(mensajeErrorLogin(error));
+                return;
+            }
+            // Sesión iniciada: entrar al panel aunque la carga del catálogo falle después.
+            window.setCatalogAdminAuthState(credential.user);
+            const lm = document.getElementById('loginModal'); if (lm) lm.classList.remove('active');
+            const cm = document.getElementById('configModal'); if (cm) cm.classList.add('active');
+            try { await initializeAdminCatalog(); }
+            catch (error) {
+                console.error('Catálogo no preparado tras login:', error);
+                alert('Entraste al panel, pero el catálogo no se pudo preparar. Revisa la conexión y las reglas de Firestore.\n\n[Diagnóstico] ' + (error.code || '') + ' ' + (error.message || error));
             }
         };
+        function mensajeErrorLogin(error) {
+            const code = error && error.code ? error.code : '';
+            const map = {
+                'auth/invalid-credential': 'Correo o contraseña incorrectos.',
+                'auth/wrong-password': 'Contraseña incorrecta.',
+                'auth/user-not-found': 'Ese correo no existe en Firebase Authentication.',
+                'auth/invalid-email': 'El correo no tiene un formato válido.',
+                'auth/missing-password': 'Escribe la contraseña.',
+                'auth/too-many-requests': 'Demasiados intentos. Espera unos minutos e intenta de nuevo.',
+                'auth/network-request-failed': 'Sin conexión a internet. Revisa tu Wi-Fi o datos móviles e intenta de nuevo.',
+                'auth/operation-not-allowed': 'El acceso con correo y contraseña no está activado en Firebase (Authentication > Método de acceso).',
+                'auth/unauthorized-domain': 'Este dominio no está autorizado en Firebase (Authentication > Configuración > Dominios autorizados).',
+                'auth/user-disabled': 'Esta cuenta de administrador está deshabilitada.'
+            };
+            return (map[code] || 'No se pudo iniciar sesión.') + '\n\n[Diagnóstico] ' + code + ' ' + (error && error.message ? error.message : '');
+        }
         window.signOutCatalogAdmin = async function() {
             try { await signOut(auth); window.setCatalogAdminAuthState(null); alert('Sesión de administrador cerrada.'); }
             catch (error) { console.error('Firebase sign-out failed:', error); alert('No se pudo cerrar la sesión en Firebase.'); }
