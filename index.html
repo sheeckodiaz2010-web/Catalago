@@ -1200,7 +1200,22 @@
         .co-total-row strong { color: #e91e8c; }
         #coSubmit { width: 100%; height: 56px; border-radius: 12px; background: #3fae2a; box-shadow: none; font-size: 1.1rem; font-weight: 500; }
         .co-error { color: #dc2626; font-size: .95rem; font-weight: 600; text-align: center; min-height: 1.2em; margin-top: 10px; }
-    </style>
+    
+        .admin-toolbar{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+        .admin-toolbar input{flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:10px;background:#f8fafc}
+        .admin-count{font-size:0.75rem;color:var(--gray);white-space:nowrap}
+        .admin-table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:12px}
+        .admin-table{width:100%;border-collapse:collapse;font-size:0.82rem;background:#fff}
+        .admin-table th{text-align:left;font-size:0.7rem;text-transform:uppercase;letter-spacing:.4px;color:var(--gray);background:#f8fafc;padding:8px;border-bottom:1px solid var(--border);white-space:nowrap}
+        .admin-table td{padding:6px 8px;border-bottom:1px solid #f1f5f9;vertical-align:middle;color:var(--primary)}
+        .admin-table tr:last-child td{border-bottom:none}
+        .admin-table tbody tr:hover{background:#f8fafc}
+        .admin-thumb{width:34px;height:34px;border-radius:7px;object-fit:cover;display:block}
+        .admin-sub{font-size:0.7rem;color:var(--gray)}
+        .admin-acts{white-space:nowrap;text-align:right}
+        .admin-acts .btn-action{padding:5px 8px;font-size:0.72rem;margin-left:4px}
+        .admin-table .empty-state{text-align:center;padding:18px}
+</style>
 <style>
 :root{--primary:#f50077!important;--accent:#f50077!important;--border:#e8eaf0!important}
 body{background:#f6f7fa!important;color:#172337!important;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}
@@ -1434,8 +1449,8 @@ body{background:#f6f7fa!important;color:#172337!important;font-family:system-ui,
 <button class="tab-btn" id="tabStockBtn" onclick="switchAdminTab('stock')">🔴 Sin Stock</button>
 </div>
 <div class="modal-body">
-<div class="admin-list" id="adminActiveList"></div>
-<div class="admin-list" id="adminStockList" style="display: none;"></div>
+<div class="admin-toolbar"><input id="adminSearch" type="text" placeholder="Buscar nombre o código" oninput="adminQuery=this.value.trim().toLowerCase();renderAdminLists()"><span class="admin-count" id="adminCount"></span></div><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th></th><th>Producto</th><th>Precio</th><th>Piezas</th><th>Categoría</th><th></th></tr></thead><tbody id="adminActiveList"></tbody></table></div>
+<div class="admin-table-wrap" id="adminStockWrap" style="display: none;"><table class="admin-table"><thead><tr><th></th><th>Producto</th><th>Precio</th><th>Piezas</th><th>Categoría</th><th></th></tr></thead><tbody id="adminStockList"></tbody></table></div>
 </div>
 </div>
 </div>
@@ -2402,8 +2417,8 @@ body{background:#f6f7fa!important;color:#172337!important;font-family:system-ui,
         function switchAdminTab(tab) {
             const activeBtn = document.getElementById('tabActiveBtn');
             const stockBtn = document.getElementById('tabStockBtn');
-            const activeList = document.getElementById('adminActiveList');
-            const stockList = document.getElementById('adminStockList');
+            const activeList = document.getElementById('adminActiveList').closest('.admin-table-wrap');
+            const stockList = document.getElementById('adminStockWrap');
 
             if (tab === 'active') {
                 activeBtn.classList.add('active');
@@ -2444,53 +2459,31 @@ body{background:#f6f7fa!important;color:#172337!important;font-family:system-ui,
             }
         }
 
+        let adminQuery = '';
         function renderAdminLists() {
             if (!ensureCatalogAdmin()) return;
             const activeListContainer = document.getElementById('adminActiveList');
             const stockListContainer = document.getElementById('adminStockList');
 
-            const activeProducts = sortByName(products.filter(p => !p.outOfStock));
-            const stockProducts = sortByName(products.filter(p => p.outOfStock));
+            const matchQ = p => !adminQuery || (String(p.name||'')+' '+String(p.code||'')).toLowerCase().includes(adminQuery);
+            const activeProducts = sortByName(products.filter(p => !p.outOfStock && matchQ(p)));
+            const stockProducts = sortByName(products.filter(p => p.outOfStock && matchQ(p)));
+            const countEl = document.getElementById('adminCount');
+            if (countEl) countEl.textContent = activeProducts.length + ' activos · ' + stockProducts.length + ' sin stock';
+            const rowHTML = (p, actions) => `<tr><td><img src="${p.image || SIN_FOTO}" class="admin-thumb" loading="lazy" decoding="async"></td><td><strong>${esc(p.name)}</strong><div class="admin-sub">${esc(p.code || 'S/C')}</div></td><td>$${p.price}</td><td>${esc(p.pieces)}</td><td>${esc(p.category || 'General')}</td><td class="admin-acts">${actions}</td></tr>`;
 
             if (activeProducts.length === 0) {
-                activeListContainer.innerHTML = '<div class="empty-state">No hay productos activos.</div>';
+                activeListContainer.innerHTML = '<tr><td colspan="6" class="empty-state">No hay productos activos.</td></tr>';
             } else {
                 activeListContainer.innerHTML = activeProducts.map(p => `
-                    <div class="admin-item">
-                        <div class="admin-item-info">
-                            <img src="${p.image || SIN_FOTO}" class="admin-item-img" loading="lazy" decoding="async">
-                            <div class="admin-item-text">
-                                <strong>${esc(p.name)}</strong> <small>(${esc(p.code || 'S/C')})</small><br>
-                                <span style="font-weight: 400; color: var(--gray);">$${p.price} | \uD83D\uDCE6 ${p.pieces} (${p.category || 'General'})</span>
-                            </div>
-                        </div>
-                        <div class="admin-item-actions">
-                            <button class="btn-action btn-edit" onclick="openEditModal('${p.id}')">Editar</button>
-                            <button class="btn-action btn-delete" onclick="moveToStock('${p.id}')">Quitar</button>
-                        </div>
-                    </div>
-                `).join('');
+                    ${activeProducts.map(p => rowHTML(p, `<button class="btn-action btn-edit" onclick="openEditModal('${p.id}')">Editar</button> <button class="btn-action btn-delete" onclick="moveToStock('${p.id}')">Quitar</button>`)).join('')}
             }
 
             if (stockProducts.length === 0) {
-                stockListContainer.innerHTML = '<div class="empty-state">No hay productos sin stock.</div>';
+                stockListContainer.innerHTML = '<tr><td colspan="6" class="empty-state">No hay productos sin stock.</td></tr>';
             } else {
                 stockListContainer.innerHTML = stockProducts.map(p => `
-                    <div class="admin-item">
-                        <div class="admin-item-info">
-                            <img src="${p.image || SIN_FOTO}" class="admin-item-img" loading="lazy" decoding="async">
-                            <div class="admin-item-text">
-                                <strong>${esc(p.name)}</strong> <small>(${esc(p.code || 'S/C')})</small><br>
-                                <span style="font-weight: 400; color: var(--gray);">$${p.price} | \uD83D\uDCE6 ${p.pieces} (${p.category || 'General'})</span>
-                            </div>
-                        </div>
-                        <div class="admin-item-actions">
-                            <button class="btn-action btn-edit" onclick="openEditModal('${p.id}')">Editar</button>
-                            <button class="btn-action btn-restore" onclick="restoreProduct('${p.id}')">Restaurar</button>
-                            <button class="btn-action btn-delete" onclick="deleteProduct('${p.id}')">Eliminar</button>
-                        </div>
-                    </div>
-                `).join('');
+                    ${stockProducts.map(p => rowHTML(p, `<button class="btn-action btn-edit" onclick="openEditModal('${p.id}')">Editar</button> <button class="btn-action btn-restore" onclick="restoreProduct('${p.id}')">Restaurar</button> <button class="btn-action btn-delete" onclick="deleteProduct('${p.id}')">Eliminar</button>`)).join('')}
             }
         }
 
