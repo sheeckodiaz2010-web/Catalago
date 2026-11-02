@@ -1640,8 +1640,8 @@ body{background:#f6f7fa!important;color:#172337!important;font-family:system-ui,
                 const ctrl = new AbortController();
                 const tm = setTimeout(() => ctrl.abort(), 4000);
                 try {
-                    await fetch('./manifest.webmanifest?__ping=' + Date.now(), { cache: 'no-store', signal: ctrl.signal });
-                    reachable = true;
+                    const response = await fetch('./manifest.webmanifest?__ping=' + Date.now(), { cache: 'no-store', signal: ctrl.signal });
+                    reachable = response.ok;
                 } catch (e) { reachable = false; }
                 clearTimeout(tm);
             }
@@ -2287,7 +2287,7 @@ body{background:#f6f7fa!important;color:#172337!important;font-family:system-ui,
             setIfEmpty('coLocalidad', c.localidad);
             setIfEmpty('coColonia', c.colonia);
             if (c.pago) {
-                const r = document.querySelector('input[name="coPago"][value="' + c.pago + '"]');
+                const r = Array.from(document.querySelectorAll('input[name="coPago"]')).find(input => input.value === c.pago);
                 if (r) r.checked = true;
             }
             document.getElementById('coError').textContent = '';
@@ -2475,15 +2475,13 @@ body{background:#f6f7fa!important;color:#172337!important;font-family:system-ui,
             if (activeProducts.length === 0) {
                 activeListContainer.innerHTML = '<tr><td colspan="6" class="empty-state">No hay productos activos.</td></tr>';
             } else {
-                activeListContainer.innerHTML = activeProducts.map(p => `
-                    ${activeProducts.map(p => rowHTML(p, `<button class="btn-action btn-edit" onclick="openEditModal('${p.id}')">Editar</button> <button class="btn-action btn-delete" onclick="moveToStock('${p.id}')">Quitar</button>`)).join('')}
+                activeListContainer.innerHTML = activeProducts.map(p => rowHTML(p, `<button class="btn-action btn-edit" onclick="openEditModal('${p.id}')">Editar</button> <button class="btn-action btn-delete" onclick="moveToStock('${p.id}')">Quitar</button>`)).join('');
             }
 
             if (stockProducts.length === 0) {
                 stockListContainer.innerHTML = '<tr><td colspan="6" class="empty-state">No hay productos sin stock.</td></tr>';
             } else {
-                stockListContainer.innerHTML = stockProducts.map(p => `
-                    ${stockProducts.map(p => rowHTML(p, `<button class="btn-action btn-edit" onclick="openEditModal('${p.id}')">Editar</button> <button class="btn-action btn-restore" onclick="restoreProduct('${p.id}')">Restaurar</button> <button class="btn-action btn-delete" onclick="deleteProduct('${p.id}')">Eliminar</button>`)).join('')}
+                stockListContainer.innerHTML = stockProducts.map(p => rowHTML(p, `<button class="btn-action btn-edit" onclick="openEditModal('${p.id}')">Editar</button> <button class="btn-action btn-restore" onclick="restoreProduct('${p.id}')">Restaurar</button> <button class="btn-action btn-delete" onclick="deleteProduct('${p.id}')">Eliminar</button>`)).join('');
             }
         }
 
@@ -2952,7 +2950,7 @@ if ('serviceWorker' in navigator) {
 (function(){
   'use strict';
   const icons=['🍬','🍿','🥤','🍭','🍫','🍪','🧁','🎁','🛍️'];
-  const originalCategories=window.renderCategoriesBar;
+  // Categorías construidas con nodos para conservar el texto seguro.
   window.renderCategoriesBar=function(){
     const bar=document.getElementById('categoriesBar');if(!bar)return;
     const all=['Todos',...categories];
@@ -2976,13 +2974,20 @@ if ('serviceWorker' in navigator) {
     }
     if(!allowed.includes(selectedDate))selectedDate='';
   }
+  function invalidatePreparedOrder(){
+    const link=document.getElementById('digarManualSend');
+    if(link)link.remove();
+  }
+  document.getElementById('checkoutModal').addEventListener('input',invalidatePreparedOrder);
+  document.getElementById('digarDateGrid').addEventListener('click',invalidatePreparedOrder);
   const oldCheckout=window.openCheckout;
-  if(typeof oldCheckout==='function')window.openCheckout=function(){oldCheckout();renderDates()};
+  if(typeof oldCheckout==='function')window.openCheckout=function(){invalidatePreparedOrder();oldCheckout();renderDates()};
   window.sendOrderWhatsApp=function(){
     const err=document.getElementById('coError');const val=id=>document.getElementById(id).value.trim();
     const nombre=val('coNombre'),negocio=val('coNegocio'),localidad=val('coLocalidad'),colonia=val('coColonia');
     let tel=val('coTel').replace(/\D/g,'');if(tel.length===12&&tel.startsWith('52'))tel=tel.slice(2);
     const pago=document.querySelector('input[name="coPago"]:checked');
+    renderDates();
     const faltan=[];if(!nombre)faltan.push('nombre');if(!negocio)faltan.push('negocio');if(tel.length!==10)faltan.push('teléfono de 10 dígitos');if(!localidad)faltan.push('ciudad');if(!colonia)faltan.push('colonia');if(!selectedDate)faltan.push('fecha de entrega');if(!pago)faltan.push('forma de pago');
     if(faltan.length){err.textContent='Completa: '+faltan.join(', ')+'.';err.scrollIntoView({block:'center'});return}
     const {lineas,total}=cartSummary();if(!lineas.length){err.textContent='El carrito está vacío.';return}
