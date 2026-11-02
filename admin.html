@@ -1262,6 +1262,25 @@ body>.modal.active{display:block!important;position:static!important;inset:auto!
 .modal.active .modal-header{position:static!important}
 #configModal .close-btn,#loginModal .close-btn{display:none}
 @media(max-width:600px){body>.modal.active{padding:12px!important}.admin-page-header{font-size:14px}}
+</style><style>
+.admin-page-header{position:sticky;top:0;z-index:20;background:white!important;color:#172337!important;border-bottom:1px solid #edf0f5}
+.admin-page-header a{color:#172337!important;font-size:12px}
+body>.modal.active{padding-bottom:95px!important;background:white!important}
+.modal.active .modal-content{border:0!important;background:white!important}
+#managerModal .modal-header h3{font-size:26px}#managerModal .close-btn{display:none}
+.panel-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:16px}
+.panel-stats>div{background:#f6f7fb;border:1px solid #eef0f5;border-radius:9px;padding:10px;font-size:11px;color:#526078}
+.panel-stats strong{display:block;color:#152239;font-size:23px;line-height:1.3}
+.panel-filters{display:grid;gap:9px;grid-template-columns:1fr;margin-bottom:10px}
+.panel-filters input,.panel-filters select{width:100%;padding:10px 12px;border:1px solid #e0e4ec;border-radius:7px;background:white;font-size:13px;color:#172337;min-width:0}
+.panel-add{background:#f50077;border:0;border-radius:9px;color:white;padding:11px;font-weight:700;cursor:pointer}
+.panel-tabs{display:flex;border-bottom:1px solid #edf0f5;margin-bottom:3px}.panel-tabs button{flex:1;background:none;border:0;border-bottom:2px solid transparent;padding:13px 5px;color:#526078;cursor:pointer}.panel-tabs .selected{color:#f50077;border-bottom-color:#f50077;font-weight:700}
+.panel-row{display:grid;grid-template-columns:42px minmax(0,1fr) 100px;gap:9px;align-items:center;padding:13px 0;border-bottom:1px solid #edf0f5}
+.panel-row img{width:40px;height:58px;object-fit:contain}.panel-name{font-size:13px;line-height:1.3;color:#172337;overflow-wrap:anywhere}.panel-meta{font-size:11px;color:#647084;margin-top:4px}.panel-actions{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;align-items:center}.panel-badge{font-size:10px;border-radius:5px;background:#def8ec;color:#168655;padding:4px}.panel-badge.stock{background:#eff1f5;color:#647084}
+.panel-toggle{appearance:none;width:32px;height:19px;background:#b8bec9;border-radius:12px;position:relative;cursor:pointer;margin:0}.panel-toggle:checked{background:#2bbd79}.panel-toggle:before{content:'';position:absolute;width:15px;height:15px;border-radius:50%;background:white;top:2px;left:2px}.panel-toggle:checked:before{left:15px}.panel-toggle:focus-visible{outline:2px solid #172337;outline-offset:3px}.panel-edit{border:1px solid #e3e7ed;background:white;border-radius:6px;padding:5px 10px;font-size:11px;cursor:pointer}
+body>.panel-nav{display:none!important}body.admin-authenticated>.panel-nav{display:flex!important;position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid #edf0f5;z-index:30;justify-content:space-around;padding:10px 8px calc(10px + env(safe-area-inset-bottom))}.panel-nav button{border:0;background:none;color:#172337;font-size:12px;padding:5px 12px;cursor:pointer}.panel-nav button.selected{color:#f50077;font-weight:700}
+body>.panel-fab{display:none!important}body.admin-authenticated>.panel-fab{display:block!important;position:fixed;right:20px;bottom:86px;width:48px;height:48px;background:#f50077;border:0;border-radius:50%;color:white;font-size:30px;z-index:31;box-shadow:0 4px 14px #f5007740;cursor:pointer}
+@media(min-width:760px){body.admin-authenticated>.modal.active{padding-left:210px!important}.panel-filters{grid-template-columns:1fr 240px 130px}.panel-row{grid-template-columns:58px minmax(0,1fr) 180px}.panel-row img{width:50px;height:66px}.panel-name{font-size:15px}body.admin-authenticated>.panel-nav{top:62px;right:auto;bottom:0;width:180px;flex-direction:column;justify-content:flex-start;background:#172337;padding-top:30px}.panel-nav button{color:white;text-align:left;padding:16px}.panel-nav button.selected{background:#f50077;color:white}body.admin-authenticated>.panel-fab{display:none!important}}
 </style></head>
 <body><header class="admin-page-header"><strong>Administración DIGAR</strong><a href="./index.html">← Volver al catálogo</a></header>
 <div class="top-block">
@@ -1462,16 +1481,12 @@ body>.modal.active{display:block!important;position:static!important;inset:auto!
 <h3>Administrar Productos</h3>
 <button class="close-btn" onclick="closeModals()">✕</button>
 </div>
-<div class="admin-tabs">
-<button class="tab-btn active" id="tabActiveBtn" onclick="switchAdminTab('active')">🟢 Activos</button>
-<button class="tab-btn" id="tabStockBtn" onclick="switchAdminTab('stock')">🔴 Sin Stock</button>
-</div>
 <div class="modal-body">
-<div class="admin-toolbar"><input id="adminSearch" type="text" placeholder="Buscar nombre o código" oninput="adminQuery=this.value.trim().toLowerCase();renderAdminLists()"><span class="admin-count" id="adminCount"></span></div><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th></th><th>Producto</th><th>Precio</th><th>Piezas</th><th>Categoría</th><th></th></tr></thead><tbody id="adminActiveList"></tbody></table></div>
-<div class="admin-table-wrap" id="adminStockWrap" style="display: none;"><table class="admin-table"><thead><tr><th></th><th>Producto</th><th>Precio</th><th>Piezas</th><th>Categoría</th><th></th></tr></thead><tbody id="adminStockList"></tbody></table></div>
-</div>
-</div>
-</div>
+<div class="panel-stats" aria-label="Resumen del catálogo"><div>Total<strong id="statTotal">0</strong></div><div>🟢 Activos<strong id="statActive">0</strong></div><div>🔴 Sin stock<strong id="statStock">0</strong></div></div>
+<div class="panel-filters"><input id="adminSearch" type="search" placeholder="Buscar nombre o código" aria-label="Buscar productos" oninput="adminQuery=this.value.trim().toLowerCase();renderAdminLists()"><select id="panelCategory" aria-label="Filtrar categoría" onchange="renderAdminLists()"><option value="">Todas las categorías</option></select><button class="panel-add" onclick="openAddModal()">+ Producto</button></div>
+<div class="panel-tabs" role="group" aria-label="Estado del producto"><button data-state="all" class="selected" onclick="switchAdminTab('all')">Todos</button><button data-state="active" onclick="switchAdminTab('active')">Activos</button><button data-state="stock" onclick="switchAdminTab('stock')">Sin stock</button></div>
+<div id="panelProductList" aria-live="polite"></div>
+</div></div></div>
 <!-- Modal: Editar Producto -->
 <div class="modal" id="editModal">
 <div class="modal-content">
@@ -3033,5 +3048,46 @@ if ('serviceWorker' in navigator) {
   renderDates();
 })();
 </script>
-<script>openConfigModal();</script></body>
+<nav class="panel-nav" aria-label="Administración"><button data-page="products" onclick="openManagerModal()">▣ Productos</button><button data-page="categories" onclick="openCategoryModal()">◇ Categorías</button><button data-page="account" onclick="openAdminAccount()">♙ Cuenta</button></nav><button class="panel-fab" aria-label="Agregar producto" onclick="openAddModal()">+</button>
+<script>
+let panelState='all';
+function panelNavigation(page){document.querySelectorAll('.panel-nav button').forEach(b=>b.classList.toggle('selected',b.dataset.page===page));}
+const previousAuthState=window.setCatalogAdminAuthState;
+window.setCatalogAdminAuthState=function(user){document.body.classList.toggle('admin-authenticated',!!user);previousAuthState(user);};
+window.openConfigModal=function(){
+ if(!isAdminLoggedIn){document.getElementById('loginModal').classList.add('active');return;}
+ openManagerModal();
+};
+window.openManagerModal=function(){if(!ensureCatalogAdmin())return;closeModals(true);document.getElementById('managerModal').classList.add('active');panelNavigation('products');renderAdminLists();};
+const previousCategoryPage=window.openCategoryModal;
+window.openCategoryModal=function(){previousCategoryPage();panelNavigation('categories');};
+window.openAdminAccount=function(){if(!ensureCatalogAdmin())return;closeModals(true);document.getElementById('configModal').classList.add('active');panelNavigation('account');};
+window.switchAdminTab=function(state){panelState=state;document.querySelectorAll('.panel-tabs button').forEach(b=>b.classList.toggle('selected',b.dataset.state===state));renderAdminLists();};
+window.renderAdminLists=function(){
+ if(!isAdminLoggedIn)return;
+ document.getElementById('statTotal').textContent=products.length;
+ document.getElementById('statActive').textContent=products.filter(p=>!p.outOfStock).length;
+ document.getElementById('statStock').textContent=products.filter(p=>p.outOfStock).length;
+ const select=document.getElementById('panelCategory'),selected=select.value;
+ select.replaceChildren(new Option('Todas las categorías',''));
+ [...new Set([...categories,...products.map(p=>p.category||'General')])].sort().forEach(c=>select.add(new Option(c,c)));
+ select.value=selected;if(select.selectedIndex<0)select.value='';
+ const list=document.getElementById('panelProductList');list.replaceChildren();
+ const filtered=sortByName(products.filter(p=>(panelState==='all'||(panelState==='stock'?p.outOfStock:!p.outOfStock))&&(!select.value||(p.category||'General')===select.value)&&(!adminQuery||(String(p.name||'')+' '+String(p.code||'')).toLowerCase().includes(adminQuery))));
+ if(!filtered.length){const empty=document.createElement('p');empty.className='empty-state';empty.textContent='No hay productos que coincidan con estos filtros.';list.append(empty);}
+ filtered.forEach(p=>{
+ const row=document.createElement('article');row.className='panel-row';
+ const image=document.createElement('img');image.src=p.image||SIN_FOTO;image.alt=p.name||'Producto';image.loading='lazy';
+ const info=document.createElement('div');const name=document.createElement('strong');name.className='panel-name';name.textContent=p.name;
+ const meta=document.createElement('div');meta.className='panel-meta';meta.textContent='$'+Number(p.price).toFixed(2)+' · '+(p.pieces||'Sin piezas');
+ const code=document.createElement('div');code.className='panel-meta';code.textContent=(p.code?'Código: '+p.code+' · ':'')+(p.category||'General');info.append(name,meta,code);
+ const actions=document.createElement('div');actions.className='panel-actions';const badge=document.createElement('span');badge.className='panel-badge'+(p.outOfStock?' stock':'');badge.textContent=p.outOfStock?'Sin stock':'Activo';
+ const toggle=document.createElement('input');toggle.type='checkbox';toggle.className='panel-toggle';toggle.checked=!p.outOfStock;toggle.setAttribute('role','switch');toggle.setAttribute('aria-label','Disponible: '+p.name);
+ toggle.addEventListener('change',async()=>{toggle.disabled=true;try{if(p.outOfStock)await restoreProduct(p.id);else await moveToStock(p.id);}finally{renderAdminLists();}});
+ const edit=document.createElement('button');edit.className='panel-edit';edit.textContent='✎ Editar';edit.onclick=()=>openEditModal(p.id);
+ actions.append(badge,toggle,edit);row.append(image,info,actions);list.append(row);
+ });
+};
+openConfigModal();
+</script></body>
 </html>

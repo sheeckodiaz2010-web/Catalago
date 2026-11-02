@@ -1,5 +1,5 @@
 /* DIGAR: instalación completa y cachés limitadas a esta aplicación. */
-const CACHE = 'digar-v6';
+const CACHE = 'digar-v7';
 const SDK_CACHE = 'digar-sdk-v1';
 const NAV_TIMEOUT = 3000;
 const INDEX = new URL('./index.html', self.registration.scope).href;
