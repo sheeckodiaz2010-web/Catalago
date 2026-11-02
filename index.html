@@ -1244,7 +1244,14 @@ body{background:#f6f7fa!important;color:#172337!important;font-family:system-ui,
 .digar-date-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:12px 0}.digar-date{border:1px solid #ebc9dc;border-radius:12px;background:#fff;padding:11px 4px;display:flex;flex-direction:column;gap:3px;align-items:center;cursor:pointer;color:#172337}.digar-date strong{font-size:23px}.digar-date small{font-size:12px}.digar-date.active{border:2px solid #f50077;background:#fff0f7;color:#b8005a}.digar-date-note{font-size:12px;color:#7b8491;line-height:1.45}
 @media(min-width:760px){#catalogList{grid-template-columns:repeat(4,minmax(0,1fr))!important;max-width:1180px;margin:auto!important}#digarWelcome,#digarSection,.categories-bar{padding-left:max(16px,calc((100vw - 1180px)/2))!important;padding-right:max(16px,calc((100vw - 1180px)/2))!important}.store-header,.search-bar{padding-left:max(16px,calc((100vw - 1180px)/2))!important;padding-right:max(16px,calc((100vw - 1180px)/2))!important}}
 @media(max-width:360px){#catalogList .pcard-img{height:118px!important;min-height:118px!important;max-height:118px!important}.digar-cat{min-width:70px}}
-</style></head>
+</style><style id="compact-categories">
+#digarWelcome{display:none!important}
+#categoriesBar{padding:8px 14px!important;gap:5px!important;flex-wrap:nowrap!important}
+#categoriesBar .digar-cat{display:inline-flex!important;flex-direction:row!important;align-items:center!important;justify-content:center!important;flex:0 0 auto!important;min-width:0!important;width:auto!important;height:28px!important;min-height:28px!important;padding:0 10px!important;border-radius:999px!important;font-size:11px!important;gap:0!important}
+#categoriesBar .digar-cat>span:first-child{display:none!important}
+#categoriesBar .digar-cat>span:last-child{font-size:11px!important;white-space:nowrap}
+</style>
+</head>
 <body>
 <div class="top-block">
 <header class="store-header"><button id="digarMenu" onclick="document.getElementById('categoriesBar').scrollIntoView({behavior:'smooth',block:'start'})" type="button">☰</button>
@@ -1669,6 +1676,10 @@ body{background:#f6f7fa!important;color:#172337!important;font-family:system-ui,
         window.setCatalogAdminAuthState = function(user) {
             isAdminLoggedIn = !!user;
             if (!isAdminLoggedIn) closeModals();
+            else if (document.documentElement.hasAttribute('data-admin-page')) {
+                closeModals(true);
+                openConfigModal();
+            }
         };
         window.applyCatalogFromFirebase = function(cloudProducts, cloudCategories, opts) {
             opts = opts || {};
@@ -2345,7 +2356,7 @@ body{background:#f6f7fa!important;color:#172337!important;font-family:system-ui,
 
             // Se muestra "Pedido enviado" y se vac\u00EDa el carrito
             document.getElementById('waRetryLink').href = url;
-            closeModals();
+            closeModals(true);
             document.getElementById('qrModal').classList.add('active');
             cart = {};
             tempSelections = {};
@@ -2363,6 +2374,10 @@ body{background:#f6f7fa!important;color:#172337!important;font-family:system-ui,
         }
 
         function openConfigModal() {
+            if (!document.documentElement.hasAttribute('data-admin-page')) {
+                window.location.assign('./admin.html');
+                return;
+            }
             setBottomNavActive('navConfig');
             if (!isAdminLoggedIn) {
                 document.getElementById('loginModal').classList.add('active');
@@ -2390,27 +2405,28 @@ body{background:#f6f7fa!important;color:#172337!important;font-family:system-ui,
             if (!ensureCatalogAdmin()) return;
             updateCategorySelects();
             document.getElementById('addProductForm').reset();
-            closeModals();
+            closeModals(true);
             document.getElementById('addModal').classList.add('active');
         }
 
         function openManagerModal() {
             if (!ensureCatalogAdmin()) return;
             renderAdminLists();
-            closeModals();
+            closeModals(true);
             document.getElementById('managerModal').classList.add('active');
         }
 
         function openCategoryModal() {
             if (!ensureCatalogAdmin()) return;
             renderCategoryAdminList();
-            closeModals();
+            closeModals(true);
             document.getElementById('categoryModal').classList.add('active');
         }
 
-        function closeModals() {
+        function closeModals(silent = false) {
             document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
             setBottomNavActive('navHome');
+            if (!silent && document.documentElement.hasAttribute('data-admin-page')) openConfigModal();
             if (typeof renderCatalog === 'function') renderCatalog();
         }
 
@@ -2543,7 +2559,7 @@ body{background:#f6f7fa!important;color:#172337!important;font-family:system-ui,
             document.getElementById('editCategory').value = product.category || 'General';
             document.getElementById('editImage').value = '';
 
-            closeModals();
+            closeModals(true);
             document.getElementById('editModal').classList.add('active');
         }
 

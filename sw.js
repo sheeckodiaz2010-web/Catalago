@@ -1,11 +1,11 @@
 /* DIGAR: instalación completa y cachés limitadas a esta aplicación. */
-const CACHE = 'digar-v5';
+const CACHE = 'digar-v6';
 const SDK_CACHE = 'digar-sdk-v1';
 const NAV_TIMEOUT = 3000;
 const INDEX = new URL('./index.html', self.registration.scope).href;
 const ROOT = new URL('./', self.registration.scope).href;
 const PRECACHE = [
-  './index.html', './manifest.webmanifest', './icon-192.png',
+  './index.html', './admin.html', './manifest.webmanifest', './icon-192.png',
   './icon-512.png', './icon-maskable-192.png',
   './icon-maskable-512.png', './apple-touch-icon.png'
 ];
@@ -50,7 +50,9 @@ async function navigate(req, net) {
     ]);
     if (res && res.ok) return res;
     const cache = await caches.open(CACHE);
-    const cached = await cache.match(req) || await cache.match(INDEX);
+    const fallback = new URL(req.url).pathname === new URL('./admin.html', self.registration.scope).pathname
+      ? new URL('./admin.html', self.registration.scope).href : INDEX;
+    const cached = await cache.match(req) || await cache.match(fallback);
     return cached || res || await net || offline();
   } finally {
     clearTimeout(timer);
