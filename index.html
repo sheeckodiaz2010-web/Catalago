@@ -211,6 +211,52 @@ footer{background:var(--primary);color:#cbd5e1;margin-top:26px}
 #toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);background:#0f172a;color:#fff;padding:12px 20px;border-radius:999px;font-weight:700;font-size:14px;opacity:0;pointer-events:none;transition:all .3s ease;z-index:120;box-shadow:0 12px 30px rgba(0,0,0,.3);white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 @media(max-width:480px){.brand-txt span{display:none}.head-in{gap:9px}.hero-card{padding:22px 18px}}
+
+/* Checkout + Admin (restaurado del catálogo anterior) */
+#checkoutModal,#adminLoginModal,#adminPanelModal{position:fixed;inset:0;z-index:1200;display:none}
+#checkoutModal.show,#adminLoginModal.show,#adminPanelModal.show{display:block}
+.co-sheet,.admin-sheet{background:#fff;color:#1e293b;max-width:560px;margin:0 auto;min-height:100dvh;max-height:100dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:calc(12px + env(safe-area-inset-top,0px)) 16px calc(24px + env(safe-area-inset-bottom,0px))}
+.co-head2{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.co-head2 h2{font-size:20px;margin:0}
+.co-x{background:#f1f5f9;border:0;border-radius:10px;width:38px;height:38px;font-size:18px;cursor:pointer}
+.co-body2{display:flex;flex-direction:column;gap:6px}
+.co-body2 h3{font-size:16px;margin:16px 0 4px;color:#1e293b}
+.co-l{font-size:14px;font-weight:600;color:#334155;margin-top:8px}
+.co-body2 input[type=text],.co-body2 input[type=tel],.co-body2 input[type=email],.co-body2 input[type=password],.co-body2 select{height:46px;width:100%;border:1.5px solid #cbd5e1;border-radius:10px;padding:0 14px;font-size:16px;background:#fff;color:#1e293b;box-sizing:border-box}
+.co-phone{display:flex;border:1.5px solid #cbd5e1;border-radius:10px;overflow:hidden;height:46px}
+.co-phone span{display:flex;align-items:center;padding:0 12px;border-right:1.5px solid #cbd5e1;white-space:nowrap;font-size:14px;background:#f8fafc}
+.co-phone input{flex:1;border:0;height:100%;padding:0 12px;font-size:16px;outline:none}
+.digar-date-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:8px 0}
+.digar-date{border:1.5px solid #cbd5e1;background:#fff;border-radius:10px;padding:8px 2px;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;font-size:12px;color:#334155}
+.digar-date strong{font-size:16px;color:#1e293b}
+.digar-date.active{background:#10b981;border-color:#10b981;color:#fff}
+.digar-date.active strong{color:#fff}
+.digar-date-note{font-size:12px;color:#64748b;margin:4px 0}
+.co-opt{display:flex;align-items:center;gap:10px;border:1.5px solid #cbd5e1;border-radius:10px;padding:12px 14px;cursor:pointer;margin-top:6px}
+.co-opt input{width:18px;height:18px}
+.co-total-row{display:flex;justify-content:space-between;font-size:18px;font-weight:800;margin:16px 0 10px}
+.co-summary{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;font-size:14px}
+.co-line{display:flex;justify-content:space-between;gap:12px;padding:4px 0}
+.co-error{color:#ef4444;font-size:14px;font-weight:600;margin-top:8px;min-height:20px}
+.co-submit{background:#10b981;color:#fff;border:0;border-radius:12px;padding:14px;font-size:16px;font-weight:800;width:100%;cursor:pointer;margin-top:8px}
+.admin-sheet{background:#0f1410;color:#eef5ef;max-width:900px}
+.admin-sheet .co-x{background:#223;color:#fff}
+.admin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:10px}
+.admin-card{background:#1a221c;border:1px solid #2c3a2f;border-radius:14px;overflow:hidden}
+.admin-card img{width:100%;height:120px;object-fit:cover;background:#222;display:block}
+.admin-card .b{padding:8px}
+.admin-card .n{font-size:14px;font-weight:600;line-height:1.2;min-height:34px}
+.admin-card .meta{font-size:12px;color:#9db4a3}
+.admin-card .row{display:flex;gap:6px;margin-top:8px}
+.admin-card button{flex:1;background:#223;color:#eef5ef;border:1px solid #2c3a2f;border-radius:9px;padding:8px 4px;font-size:12px;cursor:pointer}
+.admin-card button.on{background:#ff6b6b;color:#fff}
+.admin-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.admin-toolbar input,.admin-toolbar select{background:#0c120d;color:#eef5ef;border:1px solid #2c3a2f;border-radius:10px;padding:10px;font-size:15px}
+.admin-toolbar input[type=search]{flex:1;min-width:180px}
+.admin-stats{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.admin-chip{background:#1a221c;border:1px solid #2c3a2f;border-radius:10px;padding:6px 10px;font-size:13px}
+.admin-login-sheet{max-width:420px}
+
 </style>
 </head>
 <body>
@@ -227,6 +273,7 @@ footer{background:var(--primary);color:#cbd5e1;margin-top:26px}
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
       <input id="search" type="text" placeholder="Buscar dulces, código..." autocomplete="off"/>
     </div>
+    <button class="cart-btn" id="adminBtn" aria-label="Administrador" title="Administrador" style="margin-right:8px">🔒</button>
     <button class="cart-btn" id="cartBtn" aria-label="Ver carrito">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1.6"/><circle cx="19" cy="21" r="1.6"/><path d="M2.5 3h2l2.6 12.4a2 2 0 0 0 2 1.6h8.9a2 2 0 0 0 2-1.6L21.5 7H6"/></svg>
       <span class="cart-count hidden" id="cartCount">0</span>
@@ -322,6 +369,73 @@ footer{background:var(--primary);color:#cbd5e1;margin-top:26px}
 
 <div id="detailModal">
   <div class="sheet" id="detailSheet"></div>
+</div>
+
+
+<div id="checkoutModal" aria-label="Finalizar pedido">
+  <div class="co-sheet">
+    <div class="co-head2"><h2>Finalizar pedido</h2><button class="co-x" id="coClose" aria-label="Cerrar">✕</button></div>
+    <div class="co-summary" id="coSummary"></div>
+    <div class="co-body2">
+      <h3>Contacto</h3>
+      <label class="co-l" for="coNombre">Nombre de la persona</label>
+      <input id="coNombre" type="text" placeholder="Ingresa tu nombre" autocomplete="name"/>
+      <label class="co-l" for="coNegocio">Nombre del negocio</label>
+      <input id="coNegocio" type="text" placeholder="Nombre de tu negocio" autocomplete="organization"/>
+      <label class="co-l" for="coTel">Teléfono celular</label>
+      <div class="co-phone"><span>🇲🇽 +52</span><input id="coTel" type="tel" inputmode="numeric" maxlength="14" placeholder="10 dígitos" autocomplete="tel-national"/></div>
+      <label class="co-l" for="coLocalidad">Ciudad</label>
+      <select id="coLocalidad" autocomplete="address-level2">
+        <option value="">Selecciona tu ciudad</option>
+        <option value="Sabinas">Sabinas</option>
+        <option value="Agujita">Agujita</option>
+        <option value="Cloete">Cloete</option>
+        <option value="Rosita">Rosita</option>
+        <option value="Palau">Palau</option>
+        <option value="Múzquiz">Múzquiz</option>
+      </select>
+      <label class="co-l" for="coColonia">Colonia</label>
+      <input id="coColonia" type="text" placeholder="Colonia donde está tu negocio" autocomplete="address-level3"/>
+      <h3>Fecha de entrega</h3>
+      <p class="digar-date-note">Elige un día dentro de los próximos 7 días. Los domingos no están disponibles.</p>
+      <div class="digar-date-grid" id="digarDateGrid"></div>
+      <p class="digar-date-note">La fecha solicitada está sujeta a confirmación de DIGAR.</p>
+      <h3>Pago</h3>
+      <label class="co-opt"><input name="coPago" type="radio" value="Efectivo"/><span>Efectivo</span></label>
+      <label class="co-opt"><input name="coPago" type="radio" value="Transferencia"/><span>Transferencia</span></label>
+      <div class="co-total-row"><span>Total</span><strong id="coTotal">$0.00</strong></div>
+      <button class="co-submit" id="coSubmit">Realizar Pedido</button>
+      <div class="co-error" id="coError"></div>
+    </div>
+  </div>
+</div>
+
+<div id="adminLoginModal" aria-label="Acceso administrador">
+  <div class="co-sheet admin-login-sheet">
+    <div class="co-head2"><h2>Administrador</h2><button class="co-x" id="adminLoginClose" aria-label="Cerrar">✕</button></div>
+    <p style="font-size:14px;color:#64748b;margin:0 0 12px">Entra con tu correo y contraseña de administrador para cambiar fotos y stock. Todo se guarda en Firebase.</p>
+    <label class="co-l" for="adminEmailInput">Correo electrónico</label>
+    <input id="adminEmailInput" type="email" placeholder="admin@ejemplo.com" autocomplete="username" style="width:100%;height:46px;border:1.5px solid #cbd5e1;border-radius:10px;padding:0 14px;font-size:16px;box-sizing:border-box"/>
+    <label class="co-l" for="adminPasswordInput">Contraseña</label>
+    <input id="adminPasswordInput" type="password" placeholder="Contraseña de Firebase" autocomplete="current-password" style="width:100%;height:46px;border:1.5px solid #cbd5e1;border-radius:10px;padding:0 14px;font-size:16px;box-sizing:border-box"/>
+    <button class="co-submit" id="adminLoginBtn" style="margin-top:14px">Entrar al Panel</button>
+    <div class="co-error" id="adminLoginError"></div>
+  </div>
+</div>
+
+<div id="adminPanelModal" aria-label="Panel administrador">
+  <div class="co-sheet admin-sheet">
+    <div class="co-head2"><h2 style="color:#eef5ef">Administrador DIGAR</h2><div style="display:flex;gap:8px"><button class="co-x" id="adminLogoutBtn" title="Salir" style="width:auto;padding:0 12px;font-size:14px">Salir</button><button class="co-x" id="adminPanelClose" aria-label="Cerrar">✕</button></div></div>
+    <div id="adminStatus" style="font-size:13px;color:#9db4a3;margin-bottom:8px">Sesión: activa</div>
+    <div class="admin-stats" id="adminStats"></div>
+    <div class="admin-toolbar">
+      <input type="search" id="adminSearch" placeholder="Buscar producto…"/>
+      <select id="adminFiltro"><option value="">Todos</option><option value="oos">Solo agotados</option><option value="nofoto">Sin foto</option><option value="ok">Disponibles</option></select>
+    </div>
+    <div class="admin-grid" id="adminGrid"></div>
+    <input type="file" id="adminFileInput" accept="image/*" hidden/>
+    <p style="font-size:13px;color:#9db4a3;margin-top:14px">Cambiar foto o marcar agotado se guarda en Firebase y se refleja en el catálogo público y el POS.</p>
+  </div>
 </div>
 
 <div id="toast"></div>
@@ -492,18 +606,42 @@ function cartTotals(){
   for (const id in cart){ const p = byId[id]; if(!p) continue; n += cart[id]; t += cart[id]*p.price; }
   return {n, t};
 }
+function footHTMLFor(p){
+  const qty = cart[p.id] || 0;
+  if (p.outOfStock) return '<button class="add-btn" disabled>Agotado</button>';
+  if (qty > 0) return '<div class="stepper"><button data-dec="' + p.id + '" aria-label="Quitar uno">−</button><b>' + qty + '</b><button data-inc="' + p.id + '" aria-label="Agregar uno">+</button></div>';
+  return '<button class="add-btn" data-add="' + p.id + '">Agregar al carrito</button>';
+}
+function refreshCardFoot(id){
+  try {
+    const sel = '[data-add="' + id + '"],[data-inc="' + id + '"],[data-dec="' + id + '"]';
+    const el = grid.querySelector(sel);
+    if (!el) return;
+    const card = el.closest('.card');
+    if (!card) return;
+    const foot = card.querySelector('.card-foot');
+    const prod = byId[id];
+    if (foot && prod) foot.innerHTML = footHTMLFor(prod);
+  } catch(e) {}
+}
+function refreshFavBtn(id){
+  try {
+    const btn = grid.querySelector('[data-fav="' + id + '"]');
+    if (btn) btn.classList.toggle('on', favs.has(id));
+  } catch(e) {}
+}
 function addToCart(id, qty){
   cart[id] = (cart[id]||0) + qty; saveCart();
   const p = byId[id]; toast('Agregado: ' + (p ? p.name : ''));
-  renderGrid(); updateCartUI();
+  refreshCardFoot(id); updateCartUI();
 }
 function setQty(id, qty){
   if (qty <= 0) delete cart[id]; else cart[id] = qty;
-  saveCart(); renderGrid(); updateCartUI(); renderCartItems();
+  saveCart(); refreshCardFoot(id); updateCartUI(); renderCartItems();
 }
 function toggleFav(id){
   if (favs.has(id)) favs.delete(id); else favs.add(id);
-  saveFavs(); renderGrid();
+  saveFavs(); refreshFavBtn(id);
 }
 function updateCartUI(){
   const {n, t} = cartTotals();
@@ -543,15 +681,208 @@ $('#barBtn').addEventListener('click', openCart);
 $('#cartClose').addEventListener('click', closeCart);
 $('#overlay').addEventListener('click', () => { closeCart(); closeDetail(); });
 
-$('#checkoutBtn').addEventListener('click', () => {
+/* ---------- Checkout con datos (restaurado del catálogo anterior) ---------- */
+let selectedDate = '';
+function renderDates(){
+  const gridEl = document.getElementById('digarDateGrid');
+  if (!gridEl) return;
+  gridEl.innerHTML = '';
+  const today = new Date(); today.setHours(12,0,0,0);
+  const allowed = [];
+  for (let i=1;i<=7;i++){
+    const d = new Date(today); d.setDate(today.getDate()+i);
+    if (d.getDay() === 0) continue;
+    const key = [d.getFullYear(), String(d.getMonth()+1).padStart(2,'0'), String(d.getDate()).padStart(2,'0')].join('-');
+    allowed.push(key);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'digar-date' + (selectedDate===key ? ' active' : '');
+    const lab = document.createElement('small'); lab.textContent = d.toLocaleDateString('es-MX',{weekday:'short'});
+    const num = document.createElement('strong'); num.textContent = d.getDate();
+    const mon = document.createElement('small'); mon.textContent = d.toLocaleDateString('es-MX',{month:'short'});
+    btn.append(lab,num,mon);
+    btn.addEventListener('click', () => { selectedDate = key; renderDates(); });
+    gridEl.appendChild(btn);
+  }
+  if (!allowed.includes(selectedDate)) selectedDate = '';
+}
+function loadCliente(){
+  try { return JSON.parse(localStorage.getItem('digar_cliente') || '{}') || {}; } catch(e){ return {}; }
+}
+function openCheckout(){
+  const ids = Object.keys(cart).filter(id => byId[id]);
+  if (!ids.length){ toast('Tu carrito está vacío'); return; }
+  closeCart();
   const {t} = cartTotals();
-  const lines = Object.keys(cart).filter(id => byId[id]).map(id => {
-    const p = byId[id];
-    return '• ' + p.name + ' x' + cart[id] + ' — ' + fmt(p.price*cart[id]);
+  const summary = document.getElementById('coSummary');
+  summary.innerHTML = ids.map(id => {
+    const pr = byId[id];
+    return '<div class="co-line"><span>' + cart[id] + ' x ' + esc(pr.name) + '</span><span>' + fmt(pr.price*cart[id]) + '</span></div>';
+  }).join('') + '<div class="co-line" style="font-weight:800;border-top:1px solid #e2e8f0;margin-top:6px;padding-top:8px"><span>Total</span><span>' + fmt(t) + '</span></div>';
+  document.getElementById('coTotal').textContent = fmt(t);
+  const c = loadCliente();
+  const setIfEmpty = (id, v) => { const el = document.getElementById(id); if (el && !el.value && v) el.value = v; };
+  setIfEmpty('coNombre', c.nombre);
+  setIfEmpty('coNegocio', c.negocio);
+  setIfEmpty('coTel', c.tel);
+  setIfEmpty('coLocalidad', c.localidad);
+  setIfEmpty('coColonia', c.colonia);
+  if (c.pago){
+    const r = Array.from(document.querySelectorAll('input[name="coPago"]')).find(x => x.value === c.pago);
+    if (r) r.checked = true;
+  }
+  document.getElementById('coError').textContent = '';
+  renderDates();
+  document.getElementById('checkoutModal').classList.add('show');
+  document.getElementById('overlay').classList.add('show');
+}
+function closeCheckout(){
+  document.getElementById('checkoutModal').classList.remove('show');
+  document.getElementById('overlay').classList.remove('show');
+}
+function sendOrderWhatsApp(){
+  const err = document.getElementById('coError');
+  const val = id => document.getElementById(id).value.trim();
+  const nombre = val('coNombre'), negocio = val('coNegocio'), localidad = val('coLocalidad'), colonia = val('coColonia');
+  let tel = val('coTel').replace(/\D/g,'');
+  if (tel.length === 12 && tel.startsWith('52')) tel = tel.slice(2);
+  const pagoEl = document.querySelector('input[name="coPago"]:checked');
+  renderDates();
+  const faltan = [];
+  if (!nombre) faltan.push('nombre');
+  if (!negocio) faltan.push('negocio');
+  if (tel.length !== 10) faltan.push('teléfono de 10 dígitos');
+  if (!localidad) faltan.push('ciudad');
+  if (!colonia) faltan.push('colonia');
+  if (!selectedDate) faltan.push('fecha de entrega');
+  if (!pagoEl) faltan.push('forma de pago');
+  if (faltan.length){
+    err.textContent = 'Completa: ' + faltan.join(', ') + '.';
+    if (err.scrollIntoView) err.scrollIntoView({block:'center', behavior:'smooth'});
+    return;
+  }
+  const ids = Object.keys(cart).filter(id => byId[id]);
+  if (!ids.length){ err.textContent = 'El carrito está vacío.'; return; }
+  const {t} = cartTotals();
+  const fecha = new Date(selectedDate + 'T12:00:00').toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const pedido = 'DG-' + Date.now().toString(36).toUpperCase();
+  const lines = ids.map(id => {
+    const pr = byId[id];
+    return cart[id] + ' × ' + pr.name + (pr.code ? ' (' + pr.code + ')' : '') + ' — ' + fmt(pr.price*cart[id]);
   });
-  const msg = '¡Hola DIGAR! Quiero hacer un pedido:\n\n' + lines.join('\n') + '\n\nTotal: ' + fmt(t) + '\n\nMi nombre: ';
-  window.open('https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent(msg), '_blank');
+  const mensaje = ['🛒 DIGAR — NUEVO PEDIDO','Pedido: ' + pedido,'','DATOS DEL CLIENTE','Nombre: ' + nombre,'Negocio: ' + negocio,'Teléfono: +52 ' + tel,'Ciudad: ' + localidad,'Colonia: ' + colonia,'','ENTREGA','Fecha solicitada: ' + fecha,'','FORMA DE PAGO',pagoEl.value,'','PRODUCTOS', ...lines, '','TOTAL: ' + fmt(t),'','Fecha sujeta a confirmación.'].join('\n');
+  try { localStorage.setItem('digar_cliente', JSON.stringify({nombre,negocio,tel,localidad,colonia,pago:pagoEl.value})); } catch(e){}
+  const url = 'https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent(mensaje);
+  const win = window.open(url, '_blank');
+  if (!win) window.location.href = url;
+  cart = {}; saveCart();
+  closeCheckout();
+  renderGrid(); updateCartUI();
+  toast('Pedido listo: confirma en WhatsApp');
+}
+$('#checkoutBtn').addEventListener('click', openCheckout);
+document.getElementById('coClose').addEventListener('click', closeCheckout);
+document.getElementById('coSubmit').addEventListener('click', sendOrderWhatsApp);
+
+/* ---------- Admin en una sola página ---------- */
+let adminLoggedIn = false;
+let adminPendingId = null;
+function openAdminLogin(){
+  document.getElementById('adminLoginError').textContent = '';
+  document.getElementById('adminLoginModal').classList.add('show');
+  document.getElementById('overlay').classList.add('show');
+}
+function closeAdminLogin(){
+  document.getElementById('adminLoginModal').classList.remove('show');
+  document.getElementById('overlay').classList.remove('show');
+}
+function openAdminPanel(){
+  renderAdminGrid();
+  document.getElementById('adminPanelModal').classList.add('show');
+  document.getElementById('overlay').classList.add('show');
+}
+function closeAdminPanel(){
+  document.getElementById('adminPanelModal').classList.remove('show');
+  document.getElementById('overlay').classList.remove('show');
+}
+window.__setAdminLoggedIn = function(loggedIn, email){
+  adminLoggedIn = !!loggedIn;
+  const btn = document.getElementById('adminBtn');
+  if (btn) btn.textContent = adminLoggedIn ? '🔓' : '🔒';
+  const st = document.getElementById('adminStatus');
+  if (st) st.textContent = 'Sesión: ' + (adminLoggedIn ? (email || 'activa') : 'no iniciada');
+  if (adminLoggedIn){
+    closeAdminLogin();
+    openAdminPanel();
+  }
+};
+function adminStats(){
+  const t = PRODUCTS.length, f = PRODUCTS.filter(p=>p.image).length, o = PRODUCTS.filter(p=>p.outOfStock).length;
+  document.getElementById('adminStats').innerHTML = '<span class="admin-chip">Productos: <b>'+t+'</b></span><span class="admin-chip">Con foto: <b>'+f+'</b></span><span class="admin-chip">Agotados: <b>'+o+'</b></span><span class="admin-chip">Sin foto: <b>'+(t-f)+'</b></span>';
+}
+function renderAdminGrid(){
+  adminStats();
+  const q = (document.getElementById('adminSearch').value || '').toLowerCase();
+  const f = document.getElementById('adminFiltro').value;
+  const list = PRODUCTS.filter(p => (!q || p.name.toLowerCase().includes(q) || (p.code||'').toLowerCase().includes(q)) && (f==='oos'?p.outOfStock : f==='nofoto'?!p.image : f==='ok'?!p.outOfStock : true));
+  const gridEl = document.getElementById('adminGrid');
+  gridEl.innerHTML = list.map(p => {
+    const img = p.image ? '<img src="'+p.image+'" alt="">' : '<div style="height:120px;display:flex;align-items:center;justify-content:center;color:#9db4a3;font-size:13px">Sin foto</div>';
+    return '<div class="admin-card'+(p.outOfStock?' oos':'')+'" data-id="'+p.id+'">'+img+'<div class="b"><div class="n">'+esc(p.name)+'</div><div class="meta">'+esc(p.code||'')+' · '+esc(p.category||'General')+'<br>'+fmt(p.price)+(p.outOfStock?' · <span style="color:#ff6b6b;font-weight:700">AGOTADO</span>':'')+'</div><div class="row"><button class="admin-foto" data-id="'+p.id+'">Cambiar foto</button><button class="admin-stock'+(p.outOfStock?' on':'')+'" data-id="'+p.id+'">'+(p.outOfStock?'Reactivar':'Agotar')+'</button></div></div></div>';
+  }).join('') || '<p style="padding:16px;color:#9db4a3">Sin resultados.</p>';
+  gridEl.querySelectorAll('.admin-foto').forEach(b => b.onclick = () => { adminPendingId = b.dataset.id; document.getElementById('adminFileInput').click(); });
+  gridEl.querySelectorAll('.admin-stock').forEach(b => b.onclick = () => {
+    const pr = byId[b.dataset.id] || PRODUCTS.find(x=>x.id===b.dataset.id);
+    if (!pr) return;
+    pr.outOfStock = !pr.outOfStock;
+    renderAdminGrid(); renderGrid();
+    if (window.__saveProductToFirebase) window.__saveProductToFirebase(pr);
+  });
+}
+document.getElementById('adminBtn').addEventListener('click', () => {
+  if (adminLoggedIn) openAdminPanel(); else openAdminLogin();
 });
+document.getElementById('adminLoginClose').addEventListener('click', closeAdminLogin);
+document.getElementById('adminPanelClose').addEventListener('click', closeAdminPanel);
+document.getElementById('adminLoginBtn').addEventListener('click', () => {
+  const email = document.getElementById('adminEmailInput').value.trim();
+  const pass = document.getElementById('adminPasswordInput').value;
+  const errEl = document.getElementById('adminLoginError');
+  if (!email || !pass){ errEl.textContent = 'Escribe correo y contraseña.'; return; }
+  if (window.__adminLogin) window.__adminLogin(email, pass).catch(e => { errEl.textContent = 'No se pudo entrar: ' + (e.message || e); });
+  else errEl.textContent = 'Firebase todavía se está inicializando. Intenta en unos segundos.';
+});
+document.getElementById('adminLogoutBtn').addEventListener('click', () => {
+  if (window.__adminLogout) window.__adminLogout();
+  closeAdminPanel();
+});
+document.getElementById('adminSearch').addEventListener('input', renderAdminGrid);
+document.getElementById('adminFiltro').addEventListener('change', renderAdminGrid);
+document.getElementById('adminFileInput').addEventListener('change', e => {
+  const f = e.target.files && e.target.files[0];
+  if (!f || !adminPendingId) return;
+  const url = URL.createObjectURL(f);
+  const im = new Image();
+  im.onload = () => {
+    const max = 640; let w = im.width, h = im.height;
+    if (w > max || h > max){ const s = max/Math.max(w,h); w = Math.round(w*s); h = Math.round(h*s); }
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    c.getContext('2d').drawImage(im, 0, 0, w, h);
+    URL.revokeObjectURL(url);
+    const dataUrl = c.toDataURL('image/jpeg', 0.72);
+    const pr = byId[adminPendingId] || PRODUCTS.find(x=>x.id===adminPendingId);
+    if (pr){ pr.image = dataUrl; renderAdminGrid(); renderGrid(); if (window.__saveProductToFirebase) window.__saveProductToFirebase(pr); toast('Foto actualizada'); }
+  };
+  im.onerror = () => { URL.revokeObjectURL(url); toast('No se pudo leer la foto'); };
+  im.src = url;
+  e.target.value = '';
+});
+/* Overlay cierra checkout/admin también */
+const _origOverlay = document.getElementById('overlay');
+_origOverlay.addEventListener('click', () => { closeCheckout(); closeAdminLogin(); closeAdminPanel(); });
+if (location.hash === '#admin' || location.hash === '#administrador'){
+  setTimeout(() => { if (adminLoggedIn) openAdminPanel(); else openAdminLogin(); }, 600);
+}
 
 /* ---------- Detalle + cambio de foto ---------- */
 let detailId = null, detailQty = 1;
@@ -659,7 +990,8 @@ if ('serviceWorker' in navigator) {
 </script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, onSnapshot, setDoc } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
 const firebaseConfig = {
   apiKey: 'AIzaSyBW2CuE6HcgqMoIccoUo8UBrYfPkW4scD8',
   authDomain: 'digar-catalago.firebaseapp.com',
@@ -676,10 +1008,43 @@ try {
   const mod = await import('https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js');
   db = mod.getFirestore(app);
 }
+const auth = getAuth(app);
 const catalogCollection = collection(db, 'productos');
+const MAX_IMAGE_CHARS = 500000;
 function safePublicProduct(p) {
   return { id: String(p.id ?? ''), name: String(p.name ?? ''), code: String(p.code ?? ''), price: p.price ?? 0, pieces: String(p.pieces ?? ''), category: String(p.category || 'General'), image: String(p.image || ''), outOfStock: !!p.outOfStock };
 }
+function productDocId(id) { const key = encodeURIComponent(String(id)); if (!key || key.length > 1400 || key === 'catalogConfig') throw new Error('ID inválido'); return key; }
+async function compressImageDataUrl(dataUrl) {
+  if (!/^data:image\//i.test(dataUrl)) { if (dataUrl.length > MAX_IMAGE_CHARS) throw new Error('La imagen supera 500,000 caracteres.'); return dataUrl; }
+  const image = new Image();
+  await new Promise((resolve, reject) => { image.onload = resolve; image.onerror = () => reject(new Error('No se pudo abrir la imagen.')); image.src = dataUrl; });
+  const sw = image.naturalWidth || image.width, sh = image.naturalHeight || image.height;
+  const initScale = Math.min(1, 720 / Math.max(sw, sh));
+  for (const scale of [initScale, Math.min(initScale,.88), Math.min(initScale,.75), Math.min(initScale,.62), Math.min(initScale,.5)]) {
+    const w = Math.max(1, Math.round(sw*scale)), h = Math.max(1, Math.round(sh*scale));
+    const canvas = document.createElement('canvas'); canvas.width=w; canvas.height=h;
+    const ctx = canvas.getContext('2d', {alpha:false}); if(!ctx) throw new Error('No se pudo preparar la foto.');
+    ctx.fillStyle='#fff'; ctx.fillRect(0,0,w,h); ctx.drawImage(image,0,0,w,h);
+    for (const q of [.82,.72,.62,.52,.42,.32]) { const c = canvas.toDataURL('image/jpeg', q); if (c.length <= MAX_IMAGE_CHARS) return c; }
+  }
+  throw new Error('La foto sigue siendo demasiado grande.');
+}
+window.__saveProductToFirebase = async function(p) {
+  try {
+    if (!auth.currentUser) { alert('Inicia sesión como administrador para guardar en Firebase. El cambio quedó solo en esta pantalla.'); return; }
+    const product = safePublicProduct(p);
+    if (product.image && product.image.length > MAX_IMAGE_CHARS) product.image = await compressImageDataUrl(product.image);
+    if (product.image.length > MAX_IMAGE_CHARS) throw new Error('Foto demasiado grande para guardar.');
+    await setDoc(doc(db, 'productos', productDocId(product.id)), product);
+    console.log('[DIGAR] Guardado en Firebase:', product.name);
+  } catch(e) { console.error(e); alert('No se pudo guardar en Firebase: ' + (e.message || e)); }
+};
+window.__adminLogin = async function(email, pass) { await signInWithEmailAndPassword(auth, email, pass); };
+window.__adminLogout = async function() { await signOut(auth); };
+onAuthStateChanged(auth, user => {
+  if (window.__setAdminLoggedIn) window.__setAdminLoggedIn(!!user, user ? user.email : '');
+});
 onSnapshot(catalogCollection, snapshot => {
   const cloudProducts = snapshot.docs.filter(d => d.id !== 'catalogConfig').map(d => safePublicProduct(d.data()));
   if (cloudProducts.length && window.__refreshCatalogFromFirebase) window.__refreshCatalogFromFirebase(cloudProducts);
