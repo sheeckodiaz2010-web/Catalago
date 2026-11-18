@@ -480,7 +480,8 @@ try { fotoOverride = JSON.parse(localStorage.getItem(LS_FOTO) || '{}') || {}; } 
 const state = { q:'', cat:'Todas', sort:'destacados', showOut:false, onlyFavs:false };
 const byId = {};
 PRODUCTS.forEach(p => byId[p.id] = p);
-const imgDe = p => fotoOverride[p.id] || p.image;
+const imgDe = p => p.image;
+try { localStorage.removeItem(LS_FOTO); } catch(e){}
 
 const fmt = n => '$' + Number(n||0).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -830,8 +831,9 @@ function renderAdminGrid(){
     const img = p.image ? '<img src="'+p.image+'" alt="">' : '<div style="height:120px;display:flex;align-items:center;justify-content:center;color:#9db4a3;font-size:13px">Sin foto</div>';
     return '<div class="admin-card'+(p.outOfStock?' oos':'')+'" data-id="'+p.id+'">'+img+'<div class="b"><div class="n">'+esc(p.name)+'</div><div class="meta">'+esc(p.code||'')+' · '+esc(p.category||'General')+'<br>'+fmt(p.price)+(p.outOfStock?' · <span style="color:#ff6b6b;font-weight:700">AGOTADO</span>':'')+'</div><div class="row"><button class="admin-foto" data-id="'+p.id+'">Cambiar foto</button><button class="admin-stock'+(p.outOfStock?' on':'')+'" data-id="'+p.id+'">'+(p.outOfStock?'Reactivar':'Agotar')+'</button></div></div></div>';
   }).join('') || '<p style="padding:16px;color:#9db4a3">Sin resultados.</p>';
-  gridEl.querySelectorAll('.admin-foto').forEach(b => b.onclick = () => { adminPendingId = b.dataset.id; document.getElementById('adminFileInput').click(); });
+  gridEl.querySelectorAll('.admin-foto').forEach(b => b.onclick = () => { if (!adminLoggedIn){ openAdminLogin(); return; } adminPendingId = b.dataset.id; document.getElementById('adminFileInput').click(); });
   gridEl.querySelectorAll('.admin-stock').forEach(b => b.onclick = () => {
+    if (!adminLoggedIn){ openAdminLogin(); return; }
     const pr = byId[b.dataset.id] || PRODUCTS.find(x=>x.id===b.dataset.id);
     if (!pr) return;
     pr.outOfStock = !pr.outOfStock;
@@ -917,9 +919,6 @@ function openDetail(id){
     + (p.outOfStock ? '' : '<div class="stepper d-step" style="width:130px"><button id="dDec">−</button><b id="dQty">1</b><button id="dInc">+</button></div>')
     + '<button class="d-add" id="dAdd"' + (p.outOfStock ? ' disabled' : '') + '>' + (p.outOfStock ? 'Agotado' : 'Agregar al carrito') + '</button>'
     + '</div>'
-    + '<div class="d-foto-row"><button class="btn-outline" id="dFoto">📷 Cambiar foto</button>'
-    + '<button class="btn-link" id="dFotoReset"' + (fotoOverride[p.id] ? '' : ' style="display:none"') + '>Quitar foto personalizada</button>'
-    + '<input type="file" id="dFotoInput" accept="image/*" hidden></div>'
     + '</div>';
   $('#detailModal').classList.add('show'); $('#overlay').classList.add('show');
   $('#dClose').addEventListener('click', closeDetail);
@@ -929,29 +928,7 @@ function openDetail(id){
     $('#dDec').addEventListener('click', () => { if (detailQty > 1){ detailQty--; qEl.textContent = detailQty; } });
     $('#dAdd').addEventListener('click', () => { addToCart(detailId, detailQty); closeDetail(); openCart(); });
   }
-  $('#dFoto').addEventListener('click', () => $('#dFotoInput').click());
-  $('#dFotoInput').addEventListener('change', e => {
-    const f = e.target.files && e.target.files[0]; if (!f) return;
-    procesarFoto(f, dataUrl => {
-      fotoOverride[detailId] = dataUrl;
-      if (!saveFotos()){ delete fotoOverride[detailId]; toast('No cupo la foto en este teléfono'); return; }
-      const p2 = byId[detailId];
-      $('#dImg').outerHTML = '<img id="dImg" src="' + dataUrl + '" alt="' + esc(p2.name) + '"/>';
-      $('#dFotoReset').style.display = '';
-      renderGrid(); renderCartItems();
-      toast('Foto actualizada');
-    });
-    e.target.value = '';
-  });
-  $('#dFotoReset').addEventListener('click', () => {
-    delete fotoOverride[detailId]; saveFotos();
-    const p2 = byId[detailId];
-    const src = imgDe(p2);
-    $('#dImg').outerHTML = src ? '<img id="dImg" src="' + src + '" alt="' + esc(p2.name) + '"/>' : '<div class="ph" id="dImg">' + esc((p2.name||'?').trim().charAt(0).toUpperCase()) + '</div>';
-    $('#dFotoReset').style.display = 'none';
-    renderGrid(); renderCartItems();
-    toast('Foto restaurada');
-  });
+
 }
 function closeDetail(){ $('#detailModal').classList.remove('show'); if (!$('#cartDrawer').classList.contains('show')) $('#overlay').classList.remove('show'); }
 $('#detailModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeDetail(); });
