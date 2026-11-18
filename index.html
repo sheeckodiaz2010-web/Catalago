@@ -258,49 +258,52 @@ footer{background:var(--primary);color:#cbd5e1;margin-top:26px}
 .admin-login-sheet{max-width:420px}
 
 
-/* Admin panel mejorado - colorido */
+/* Admin panel mejorado - colores del catálogo */
 #adminEditModal,#adminAddModal,#adminCatsModal{position:fixed;inset:0;z-index:1300;display:none}
 #adminEditModal.show,#adminAddModal.show,#adminCatsModal.show{display:block}
-.admin-sheet2{background:#fff7fb;color:#1e293b;max-width:900px}
-.admin-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px;padding:14px;border-radius:16px;background:linear-gradient(135deg,#ff2fa0 0%,#ff7a18 25%,#ffd400 50%,#1ea5f0 75%,#62c52a 100%);color:#fff}
-.admin-head h2{margin:0;font-size:20px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.25)}
-.admin-sub{font-size:13px;color:#fff;opacity:.95;margin-top:2px;font-weight:600}
+.admin-sheet2{background:var(--bg);color:var(--text);max-width:900px}
+.admin-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px;padding:14px;border-radius:16px;background:linear-gradient(135deg,var(--primary) 0%,var(--primary-light) 100%);color:#fff;box-shadow:0 4px 20px rgba(0,0,0,.12)}
+.admin-head h2{margin:0;font-size:20px;color:#fff}
+.admin-sub{font-size:13px;color:#cbd5e1;margin-top:2px;font-weight:500}
 .admin-head-btns{display:flex;gap:8px}
-.admin-mini-btn{background:rgba(255,255,255,.92);color:#1e293b;border:0;border-radius:10px;padding:8px 12px;font-size:14px;font-weight:700;cursor:pointer}
+.admin-mini-btn{background:rgba(255,255,255,.12);color:#fff;border:0;border-radius:999px;padding:8px 12px;font-size:14px;font-weight:700;cursor:pointer}
+.admin-mini-btn:active{background:rgba(255,255,255,.25)}
 .admin-actions{display:flex;gap:8px;margin:10px 0}
-.admin-action-btn{flex:1;background:#1ea5f0;color:#fff;border:0;border-radius:12px;padding:12px;font-size:15px;font-weight:800;cursor:pointer}
-.admin-action-btn.primary{background:#62c52a;color:#fff}
-.admin-action-btn.pink{background:#ff2fa0;color:#fff}
+.admin-action-btn{flex:1;background:var(--primary);color:#fff;border:0;border-radius:12px;padding:12px;font-size:15px;font-weight:800;cursor:pointer}
+.admin-action-btn.primary{background:var(--accent);color:#fff;box-shadow:0 8px 18px -6px rgba(16,185,129,.55)}
+.admin-action-btn.primary:hover{background:var(--accent-dark)}
+.admin-action-btn.pink{background:var(--primary-light);color:#fff}
 .admin-toolbar2{display:flex;flex-direction:column;gap:8px;margin:10px 0}
-.admin-toolbar2 input[type=search]{background:#fff;color:#1e293b;border:2px solid #ff2fa0;border-radius:12px;padding:12px;font-size:16px;width:100%;box-sizing:border-box}
+.admin-toolbar2 input[type=search]{background:#fff;color:var(--text);border:1.5px solid var(--border);border-radius:999px;padding:12px 14px;font-size:16px;width:100%;box-sizing:border-box;outline:none}
+.admin-toolbar2 input[type=search]:focus{box-shadow:0 0 0 3px rgba(16,185,129,.35);border-color:var(--accent)}
 .admin-tabs2{display:flex;gap:6px;flex-wrap:wrap}
-.admin-tab{flex:1;min-width:90px;background:#f1f5f9;color:#475569;border:2px solid #e2e8f0;border-radius:12px;padding:10px;font-size:14px;font-weight:800;cursor:pointer}
-.admin-tab.active{background:#ff2fa0;color:#fff;border-color:#ff2fa0}
-.admin-tab[data-tab="stock"].active{background:#ff7a18;border-color:#ff7a18}
-.admin-tab[data-tab="nofoto"].active{background:#8e44d6;border-color:#8e44d6}
-.admin-tab[data-tab="all"].active{background:#1ea5f0;border-color:#1ea5f0}
+.admin-tab{flex:1;min-width:90px;background:#fff;color:var(--gray);border:1.5px solid var(--border);border-radius:999px;padding:10px;font-size:14px;font-weight:700;cursor:pointer}
+.admin-tab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.admin-tab[data-tab="stock"].active{background:var(--warn);border-color:var(--warn);color:#fff}
+.admin-tab[data-tab="nofoto"].active{background:var(--primary-light);border-color:var(--primary-light);color:#fff}
+.admin-tab[data-tab="all"].active{background:var(--accent);border-color:var(--accent);color:#fff}
 .admin-list2{display:flex;flex-direction:column;gap:8px}
-.admin-row{display:flex;gap:10px;background:#fff;border:2px solid #f0e6f5;border-radius:14px;padding:8px;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,.06)}
-.admin-row.selected{border-color:#ff2fa0;background:#fff0f7}
-.admin-row input[type=checkbox]{width:22px;height:22px;accent-color:#ff2fa0;flex-shrink:0}
-.admin-row img{width:56px;height:56px;object-fit:cover;border-radius:10px;background:#f1f5f9;flex-shrink:0;border:2px solid #ffd400}
+.admin-row{display:flex;gap:10px;background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:8px;align-items:center;box-shadow:var(--shadow)}
+.admin-row.selected{border-color:var(--accent);background:#ecfdf5}
+.admin-row input[type=checkbox]{width:22px;height:22px;accent-color:var(--accent);flex-shrink:0}
+.admin-row img{width:56px;height:56px;object-fit:cover;border-radius:12px;background:#e2e8f0;flex-shrink:0}
 .admin-row .mid{flex:1;min-width:0}
-.admin-row .n{font-size:15px;font-weight:800;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#1e293b}
-.admin-row .meta{font-size:12px;color:#64748b;margin-top:2px}
+.admin-row .n{font-size:15px;font-weight:800;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+.admin-row .meta{font-size:12px;color:var(--gray);margin-top:2px}
 .admin-row .acts{display:flex;flex-direction:column;gap:4px;flex-shrink:0}
-.admin-row .acts button{background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;border-radius:8px;padding:6px 8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.admin-row .acts button{background:#f1f5f9;color:var(--primary);border:1px solid var(--border);border-radius:9px;padding:6px 8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
 .admin-row .acts button.danger{background:#fee2e2;border-color:#fecaca;color:#b91c1c}
-.admin-row .acts button.on{background:#ff7a18;color:#fff;border-color:#ff7a18}
-.admin-row .acts button.del{background:#ef4444;color:#fff;border-color:#ef4444}
-.admin-note{font-size:13px;color:#64748b;margin-top:14px}
-.admin-cat-row{display:flex;justify-content:space-between;align-items:center;background:#fff;border:2px solid #e0f2fe;border-radius:10px;padding:10px 12px;margin-bottom:6px}
+.admin-row .acts button.on{background:var(--warn);color:#fff;border-color:var(--warn)}
+.admin-row .acts button.del{background:var(--danger);color:#fff;border-color:var(--danger)}
+.admin-note{font-size:13px;color:var(--gray);margin-top:14px}
+.admin-cat-row{display:flex;justify-content:space-between;align-items:center;background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;margin-bottom:6px}
 .admin-cat-row .acts{display:flex;gap:6px}
-.admin-cat-row button{border:1px solid #bae6fd;background:#e0f2fe;color:#0369a1;border-radius:8px;padding:6px 10px;font-size:13px;font-weight:700;cursor:pointer}
-.admin-selectbar{display:flex;align-items:center;gap:8px;background:#fff7ed;border:2px dashed #ff7a18;border-radius:12px;padding:10px 12px;margin:8px 0;font-size:14px;font-weight:700;color:#9a3412}
-.admin-selectbar button{background:#ef4444;color:#fff;border:0;border-radius:10px;padding:8px 12px;font-weight:800;cursor:pointer}
-.admin-selectbar button.clear{background:#f1f5f9;color:#475569}
-.admin-stats .admin-chip{background:#fff;border:2px solid #ffd400;color:#92400e}
-.admin-stats .admin-chip b{color:#ff2fa0}
+.admin-cat-row button{border:1px solid var(--border);background:#f1f5f9;color:var(--primary);border-radius:9px;padding:6px 10px;font-size:13px;font-weight:700;cursor:pointer}
+.admin-selectbar{display:flex;align-items:center;gap:8px;background:#fff7ed;border:1.5px solid #fed7aa;border-radius:12px;padding:10px 12px;margin:8px 0;font-size:14px;font-weight:700;color:#9a3412}
+.admin-selectbar button{background:var(--danger);color:#fff;border:0;border-radius:10px;padding:8px 12px;font-weight:800;cursor:pointer}
+.admin-selectbar button.clear{background:#f1f5f9;color:var(--gray)}
+.admin-stats .admin-chip{background:#fff;border:1.5px solid var(--border);color:var(--gray)}
+.admin-stats .admin-chip b{color:var(--primary)}
 </style>
 </head>
 <body>
@@ -974,10 +977,10 @@ function renderAdminGrid(){
   list.sort((a,b)=>(a.name||'').localeCompare(b.name||'','es',{sensitivity:'base',numeric:true}));
   const gridEl = document.getElementById('adminGrid');
   gridEl.innerHTML = list.map(p => {
-    const img = p.image ? '<img src="'+p.image+'" alt="">' : '<div style="width:56px;height:56px;display:flex;align-items:center;justify-content:center;color:#8e44d6;font-size:11px;font-weight:800;background:#f3e8ff;border:2px dashed #8e44d6;border-radius:10px;flex-shrink:0">Sin foto</div>';
+    const img = p.image ? '<img src="'+p.image+'" alt="">' : '<div style="width:56px;height:56px;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:11px;font-weight:800;background:#f1f5f9;border:1.5px dashed #cbd5e1;border-radius:12px;flex-shrink:0">Sin foto</div>';
     const checked = adminSelected.has(p.id) ? ' checked' : '';
     return '<div class="admin-row'+(adminSelected.has(p.id)?' selected':'')+'" data-id="'+p.id+'"><input type="checkbox" class="admin-check" data-id="'+p.id+'"'+checked+' aria-label="Seleccionar"/>'+img
-      + '<div class="mid"><div class="n">'+esc(p.name)+'</div><div class="meta">'+esc(p.code||'S/C')+' · '+esc(p.category||'General')+'<br>'+fmt(p.price)+' · '+(p.pieces?esc(p.pieces)+' · ':'')+(p.outOfStock?'<span style="color:#ff7a18;font-weight:800">INACTIVO</span>':'<span style="color:#62c52a;font-weight:800">ACTIVO</span>')+(!p.image?' · <span style="color:#8e44d6;font-weight:800">SIN FOTO</span>':'')+'</div></div>'
+      + '<div class="mid"><div class="n">'+esc(p.name)+'</div><div class="meta">'+esc(p.code||'S/C')+' · '+esc(p.category||'General')+'<br>'+fmt(p.price)+' · '+(p.pieces?esc(p.pieces)+' · ':'')+(p.outOfStock?'<span style="color:#f59e0b;font-weight:800">INACTIVO</span>':'<span style="color:#059669;font-weight:800">ACTIVO</span>')+(!p.image?' · <span style="color:#64748b;font-weight:800">SIN FOTO</span>':'')+'</div></div>'
       + '<div class="acts"><button class="admin-edit" data-id="'+p.id+'">Editar</button><button class="admin-foto" data-id="'+p.id+'">Foto</button><button class="admin-stock'+(p.outOfStock?' on':'')+'" data-id="'+p.id+'">'+(p.outOfStock?'Reactivar':'Inactivar')+'</button><button class="admin-del del" data-id="'+p.id+'">Eliminar</button></div></div>';
   }).join('') || '<p style="padding:16px;color:#64748b">Sin resultados.</p>';
   gridEl.querySelectorAll('.admin-check').forEach(cb => cb.addEventListener('change', () => {
