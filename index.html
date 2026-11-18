@@ -663,7 +663,6 @@ function renderBest(){
     const img = imgDe(p) ? '<img src="' + imgDe(p) + '" alt="' + esc(p.name) + '" loading="lazy"/>' : '<div class="ph">' + esc((p.name||'?').trim().charAt(0).toUpperCase()) + '</div>';
     return '<div class="b-card" data-detail="' + p.id + '"><div class="b-img">' + img + '<span class="rank">' + (i+1) + '</span></div>'
       + '<div class="b-body"><div class="b-name">' + esc(p.name) + '</div>'
-      + '<div class="b-sold">' + p.sold + ' vendidos</div>'
       + '<div class="b-price">' + fmt(p.price) + '</div>'
       + '<button class="b-add" data-add="' + p.id + '">Agregar</button></div></div>';
   }).join('');
@@ -1257,7 +1256,7 @@ function openDetail(id){
   $('#detailSheet').innerHTML =
     '<div class="d-img">' + img + '<button class="d-close" id="dClose">✕</button></div>'
     + '<div class="d-body"><h2>' + esc(p.name) + '</h2>'
-    + '<div class="d-meta"><span>🏷️ ' + esc(p.category) + '</span>' + (pl ? '<span>📦 ' + esc(pl) + '</span>' : '') + (p.code ? '<span>Código: ' + esc(p.code) + '</span>' : '') + (p.sold ? '<span>🔥 ' + p.sold + ' vendidos</span>' : '') + '</div>'
+    + '<div class="d-meta"><span>🏷️ ' + esc(p.category) + '</span>' + (pl ? '<span>📦 ' + esc(pl) + '</span>' : '') + (p.code ? '<span>Código: ' + esc(p.code) + '</span>' : '') + '</div>'
     + '<div class="d-price">' + fmt(p.price) + '</div>'
     + '<div class="d-stock ' + (p.outOfStock?'no':'ok') + '">' + (p.outOfStock ? 'Agotado por el momento' : 'Disponible') + '</div>'
     + '<div class="d-actions">'
