@@ -257,6 +257,39 @@ footer{background:var(--primary);color:#cbd5e1;margin-top:26px}
 .admin-chip{background:#1a221c;border:1px solid #2c3a2f;border-radius:10px;padding:6px 10px;font-size:13px}
 .admin-login-sheet{max-width:420px}
 
+
+/* Admin panel mejorado */
+#adminEditModal,#adminAddModal,#adminCatsModal{position:fixed;inset:0;z-index:1300;display:none}
+#adminEditModal.show,#adminAddModal.show,#adminCatsModal.show{display:block}
+.admin-sheet2{background:#0f1410;color:#eef5ef;max-width:900px}
+.admin-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px}
+.admin-head h2{margin:0;font-size:20px;color:#eef5ef}
+.admin-sub{font-size:13px;color:#9db4a3;margin-top:2px}
+.admin-head-btns{display:flex;gap:8px}
+.admin-mini-btn{background:#223;color:#eef5ef;border:1px solid #2c3a2f;border-radius:10px;padding:8px 12px;font-size:14px;cursor:pointer}
+.admin-actions{display:flex;gap:8px;margin:10px 0}
+.admin-action-btn{flex:1;background:#223;color:#eef5ef;border:1px solid #2c3a2f;border-radius:12px;padding:12px;font-size:15px;font-weight:700;cursor:pointer}
+.admin-action-btn.primary{background:#10b981;color:#fff;border-color:#10b981}
+.admin-toolbar2{display:flex;flex-direction:column;gap:8px;margin:10px 0}
+.admin-toolbar2 input[type=search]{background:#0c120d;color:#eef5ef;border:1px solid #2c3a2f;border-radius:10px;padding:12px;font-size:16px;width:100%;box-sizing:border-box}
+.admin-tabs2{display:flex;gap:6px}
+.admin-tab{flex:1;background:#1a221c;color:#9db4a3;border:1px solid #2c3a2f;border-radius:10px;padding:10px;font-size:14px;font-weight:700;cursor:pointer}
+.admin-tab.active{background:#eef5ef;color:#0f1410}
+.admin-list2{display:flex;flex-direction:column;gap:8px}
+.admin-row{display:flex;gap:10px;background:#1a221c;border:1px solid #2c3a2f;border-radius:14px;padding:8px;align-items:center}
+.admin-row img{width:56px;height:56px;object-fit:cover;border-radius:10px;background:#223;flex-shrink:0}
+.admin-row .mid{flex:1;min-width:0}
+.admin-row .n{font-size:15px;font-weight:700;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.admin-row .meta{font-size:12px;color:#9db4a3;margin-top:2px}
+.admin-row .acts{display:flex;flex-direction:column;gap:4px;flex-shrink:0}
+.admin-row .acts button{background:#223;color:#eef5ef;border:1px solid #2c3a2f;border-radius:8px;padding:6px 8px;font-size:12px;cursor:pointer;white-space:nowrap}
+.admin-row .acts button.danger{background:#3a1a1a;border-color:#5a2a2a;color:#ffb4b4}
+.admin-row .acts button.on{background:#ff6b6b;color:#fff;border-color:#ff6b6b}
+.admin-note{font-size:13px;color:#9db4a3;margin-top:14px}
+.admin-cat-row{display:flex;justify-content:space-between;align-items:center;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;margin-bottom:6px}
+.admin-cat-row .acts{display:flex;gap:6px}
+.admin-cat-row button{border:1px solid #cbd5e1;background:#fff;border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer}
+
 </style>
 </head>
 <body>
@@ -424,17 +457,92 @@ footer{background:var(--primary);color:#cbd5e1;margin-top:26px}
 </div>
 
 <div id="adminPanelModal" aria-label="Panel administrador">
-  <div class="co-sheet admin-sheet">
-    <div class="co-head2"><h2 style="color:#eef5ef">Administrador DIGAR</h2><div style="display:flex;gap:8px"><button class="co-x" id="adminLogoutBtn" title="Salir" style="width:auto;padding:0 12px;font-size:14px">Salir</button><button class="co-x" id="adminPanelClose" aria-label="Cerrar">✕</button></div></div>
-    <div id="adminStatus" style="font-size:13px;color:#9db4a3;margin-bottom:8px">Sesión: activa</div>
-    <div class="admin-stats" id="adminStats"></div>
-    <div class="admin-toolbar">
-      <input type="search" id="adminSearch" placeholder="Buscar producto…"/>
-      <select id="adminFiltro"><option value="">Todos</option><option value="oos">Solo agotados</option><option value="nofoto">Sin foto</option><option value="ok">Disponibles</option></select>
+  <div class="co-sheet admin-sheet2">
+    <div class="admin-head">
+      <div>
+        <h2>Panel Administrador</h2>
+        <div class="admin-sub" id="adminStatus">Sesión: activa</div>
+      </div>
+      <div class="admin-head-btns">
+        <button class="admin-mini-btn" id="adminLogoutBtn">Salir</button>
+        <button class="admin-mini-btn" id="adminPanelClose">Cerrar</button>
+      </div>
     </div>
-    <div class="admin-grid" id="adminGrid"></div>
+    <div class="admin-stats" id="adminStats"></div>
+    <div class="admin-actions">
+      <button class="admin-action-btn primary" id="adminAddBtn">+ Nuevo producto</button>
+      <button class="admin-action-btn" id="adminCatsBtn">Categorías</button>
+    </div>
+    <div class="admin-toolbar2">
+      <input type="search" id="adminSearch" placeholder="Buscar por nombre o código…"/>
+      <div class="admin-tabs2">
+        <button class="admin-tab active" data-tab="active">Activos</button>
+        <button class="admin-tab" data-tab="stock">Sin stock</button>
+        <button class="admin-tab" data-tab="all">Todos</button>
+      </div>
+    </div>
+    <div class="admin-list2" id="adminGrid"></div>
     <input type="file" id="adminFileInput" accept="image/*" hidden/>
-    <p style="font-size:13px;color:#9db4a3;margin-top:14px">Cambiar foto o marcar agotado se guarda en Firebase y se refleja en el catálogo público y el POS.</p>
+    <p class="admin-note">Solo tú con sesión puedes cambiar fotos, precios y stock. Todo se guarda en Firebase y se refleja en el catálogo y el POS.</p>
+  </div>
+</div>
+
+<div id="adminEditModal" aria-label="Editar producto">
+  <div class="co-sheet">
+    <div class="co-head2"><h2 id="adminEditTitle">Editar producto</h2><button class="co-x" id="adminEditClose" aria-label="Cerrar">✕</button></div>
+    <div class="co-body2">
+      <input type="hidden" id="editId"/>
+      <label class="co-l" for="editName">Nombre del producto</label>
+      <input id="editName" type="text" placeholder="Ej. Chocolate Snickers"/>
+      <label class="co-l" for="editCode">Código / SKU</label>
+      <input id="editCode" type="text" placeholder="Ej. D-0027"/>
+      <label class="co-l" for="editPrice">Precio ($)</label>
+      <input id="editPrice" type="number" step="0.01" inputmode="decimal" placeholder="0.00"/>
+      <label class="co-l" for="editPieces">Piezas (por paquete/caja)</label>
+      <input id="editPieces" type="text" placeholder="Ej. 24 piezas"/>
+      <label class="co-l" for="editCategory">Categoría</label>
+      <select id="editCategory"></select>
+      <label class="co-l" for="editImage">Cambiar foto (opcional)</label>
+      <input id="editImage" type="file" accept="image/*"/>
+      <button class="co-submit" id="editSaveBtn">Guardar cambios</button>
+      <div class="co-error" id="editError"></div>
+    </div>
+  </div>
+</div>
+
+<div id="adminAddModal" aria-label="Nuevo producto">
+  <div class="co-sheet">
+    <div class="co-head2"><h2>Nuevo producto</h2><button class="co-x" id="adminAddClose" aria-label="Cerrar">✕</button></div>
+    <div class="co-body2">
+      <label class="co-l" for="addName">Nombre del producto</label>
+      <input id="addName" type="text" placeholder="Ej. Chocolate Snickers"/>
+      <label class="co-l" for="addCode">Código / SKU</label>
+      <input id="addCode" type="text" placeholder="Ej. D-0027"/>
+      <label class="co-l" for="addPrice">Precio ($)</label>
+      <input id="addPrice" type="number" step="0.01" inputmode="decimal" placeholder="0.00"/>
+      <label class="co-l" for="addPieces">Piezas (por paquete/caja)</label>
+      <input id="addPieces" type="text" placeholder="Ej. 24 piezas"/>
+      <label class="co-l" for="addCategory">Categoría</label>
+      <select id="addCategory"></select>
+      <label class="co-l" for="addImage">Foto</label>
+      <input id="addImage" type="file" accept="image/*"/>
+      <button class="co-submit" id="addSaveBtn">Guardar producto</button>
+      <div class="co-error" id="addError"></div>
+    </div>
+  </div>
+</div>
+
+<div id="adminCatsModal" aria-label="Categorías">
+  <div class="co-sheet">
+    <div class="co-head2"><h2>Categorías</h2><button class="co-x" id="adminCatsClose" aria-label="Cerrar">✕</button></div>
+    <div class="co-body2">
+      <div style="display:flex;gap:8px">
+        <input id="newCatName" type="text" placeholder="Nueva categoría…" style="flex:1;height:46px;border:1.5px solid #cbd5e1;border-radius:10px;padding:0 14px;font-size:16px"/>
+        <button class="co-submit" id="newCatBtn" style="width:auto;margin:0;padding:0 16px">+ Agregar</button>
+      </div>
+      <div id="adminCatsList" style="margin-top:12px"></div>
+      <p class="digar-date-note">Renombrar actualiza todos los productos de esa categoría. Borrar mueve sus productos a General.</p>
+    </div>
   </div>
 </div>
 
@@ -785,9 +893,23 @@ $('#checkoutBtn').addEventListener('click', openCheckout);
 document.getElementById('coClose').addEventListener('click', closeCheckout);
 document.getElementById('coSubmit').addEventListener('click', sendOrderWhatsApp);
 
-/* ---------- Admin en una sola página ---------- */
+/* ---------- Admin en una sola página (mejorado) ---------- */
 let adminLoggedIn = false;
 let adminPendingId = null;
+let adminTab = 'active';
+let adminQuery = '';
+function getCategories(){
+  const set = new Set(['General']);
+  try { (JSON.parse(localStorage.getItem('digar_extra_cats') || '[]')||[]).forEach(c=>set.add(c)); } catch(e){}
+  PRODUCTS.forEach(p => { if (p.category) set.add(p.category); });
+  return [...set].sort((a,b)=>a.localeCompare(b,'es',{sensitivity:'base'}));
+}
+function fillCategorySelect(selId, selected){
+  const sel = document.getElementById(selId);
+  if (!sel) return;
+  const cats = getCategories();
+  sel.innerHTML = cats.map(c => '<option value="'+esc(c)+'"'+(c===selected?' selected':'')+'>'+esc(c)+'</option>').join('') + '<option value="__nueva__">+ Nueva categoría…</option>';
+}
 function openAdminLogin(){
   document.getElementById('adminLoginError').textContent = '';
   document.getElementById('adminLoginModal').classList.add('show');
@@ -823,14 +945,19 @@ function adminStats(){
 }
 function renderAdminGrid(){
   adminStats();
-  const q = (document.getElementById('adminSearch').value || '').toLowerCase();
-  const f = document.getElementById('adminFiltro').value;
-  const list = PRODUCTS.filter(p => (!q || p.name.toLowerCase().includes(q) || (p.code||'').toLowerCase().includes(q)) && (f==='oos'?p.outOfStock : f==='nofoto'?!p.image : f==='ok'?!p.outOfStock : true));
+  const q = adminQuery.toLowerCase();
+  let list = PRODUCTS.filter(p => !q || p.name.toLowerCase().includes(q) || (p.code||'').toLowerCase().includes(q));
+  if (adminTab === 'active') list = list.filter(p => !p.outOfStock);
+  else if (adminTab === 'stock') list = list.filter(p => p.outOfStock);
+  list.sort((a,b)=>(a.name||'').localeCompare(b.name||'','es',{sensitivity:'base',numeric:true}));
   const gridEl = document.getElementById('adminGrid');
   gridEl.innerHTML = list.map(p => {
-    const img = p.image ? '<img src="'+p.image+'" alt="">' : '<div style="height:120px;display:flex;align-items:center;justify-content:center;color:#9db4a3;font-size:13px">Sin foto</div>';
-    return '<div class="admin-card'+(p.outOfStock?' oos':'')+'" data-id="'+p.id+'">'+img+'<div class="b"><div class="n">'+esc(p.name)+'</div><div class="meta">'+esc(p.code||'')+' · '+esc(p.category||'General')+'<br>'+fmt(p.price)+(p.outOfStock?' · <span style="color:#ff6b6b;font-weight:700">AGOTADO</span>':'')+'</div><div class="row"><button class="admin-foto" data-id="'+p.id+'">Cambiar foto</button><button class="admin-stock'+(p.outOfStock?' on':'')+'" data-id="'+p.id+'">'+(p.outOfStock?'Reactivar':'Agotar')+'</button></div></div></div>';
+    const img = p.image ? '<img src="'+p.image+'" alt="">' : '<div style="width:56px;height:56px;display:flex;align-items:center;justify-content:center;color:#9db4a3;font-size:11px;background:#223;border-radius:10px;flex-shrink:0">Sin foto</div>';
+    return '<div class="admin-row" data-id="'+p.id+'">'+img
+      + '<div class="mid"><div class="n">'+esc(p.name)+'</div><div class="meta">'+esc(p.code||'S/C')+' · '+esc(p.category||'General')+'<br>'+fmt(p.price)+' · '+(p.pieces?esc(p.pieces)+' · ':'')+(p.outOfStock?'<span style="color:#ff6b6b;font-weight:700">AGOTADO</span>':'<span style="color:#4ade80">Activo</span>')+'</div></div>'
+      + '<div class="acts"><button class="admin-edit" data-id="'+p.id+'">Editar</button><button class="admin-foto" data-id="'+p.id+'">Foto</button><button class="admin-stock'+(p.outOfStock?' on':'')+'" data-id="'+p.id+'">'+(p.outOfStock?'Reactivar':'Agotar')+'</button></div></div>';
   }).join('') || '<p style="padding:16px;color:#9db4a3">Sin resultados.</p>';
+  gridEl.querySelectorAll('.admin-edit').forEach(b => b.onclick = () => { if (!adminLoggedIn){ openAdminLogin(); return; } openEditProduct(b.dataset.id); });
   gridEl.querySelectorAll('.admin-foto').forEach(b => b.onclick = () => { if (!adminLoggedIn){ openAdminLogin(); return; } adminPendingId = b.dataset.id; document.getElementById('adminFileInput').click(); });
   gridEl.querySelectorAll('.admin-stock').forEach(b => b.onclick = () => {
     if (!adminLoggedIn){ openAdminLogin(); return; }
@@ -839,6 +966,88 @@ function renderAdminGrid(){
     pr.outOfStock = !pr.outOfStock;
     renderAdminGrid(); renderGrid();
     if (window.__saveProductToFirebase) window.__saveProductToFirebase(pr);
+    toast(pr.outOfStock ? 'Marcado sin stock' : 'Reactivado');
+  });
+}
+function openEditProduct(id){
+  const pr = byId[id] || PRODUCTS.find(x=>x.id===id);
+  if (!pr) return;
+  document.getElementById('adminEditTitle').textContent = 'Editar: ' + pr.name;
+  document.getElementById('editId').value = pr.id;
+  document.getElementById('editName').value = pr.name || '';
+  document.getElementById('editCode').value = pr.code || '';
+  document.getElementById('editPrice').value = pr.price ?? '';
+  document.getElementById('editPieces').value = pr.pieces || '';
+  fillCategorySelect('editCategory', pr.category || 'General');
+  document.getElementById('editImage').value = '';
+  document.getElementById('editError').textContent = '';
+  document.getElementById('adminEditModal').classList.add('show');
+}
+function closeEditProduct(){ document.getElementById('adminEditModal').classList.remove('show'); }
+function openAddProduct(){
+  document.getElementById('addName').value = '';
+  document.getElementById('addCode').value = '';
+  document.getElementById('addPrice').value = '';
+  document.getElementById('addPieces').value = '';
+  fillCategorySelect('addCategory', 'General');
+  document.getElementById('addImage').value = '';
+  document.getElementById('addError').textContent = '';
+  document.getElementById('adminAddModal').classList.add('show');
+}
+function closeAddProduct(){ document.getElementById('adminAddModal').classList.remove('show'); }
+function openCats(){
+  renderCatsList();
+  document.getElementById('adminCatsModal').classList.add('show');
+}
+function closeCats(){ document.getElementById('adminCatsModal').classList.remove('show'); }
+function renderCatsList(){
+  const cats = getCategories();
+  const counts = {};
+  PRODUCTS.forEach(p => { const c = p.category || 'General'; counts[c] = (counts[c]||0)+1; });
+  document.getElementById('adminCatsList').innerHTML = cats.map(c => '<div class="admin-cat-row"><span><b>'+esc(c)+'</b> <span style="color:#64748b;font-size:13px">('+ (counts[c]||0) +' productos)</span></span><span class="acts"><button data-cat="'+esc(c)+'" class="cat-rename">Renombrar</button>'+(cats.length>1?'<button data-cat="'+esc(c)+'" class="cat-delete">Borrar</button>':'')+'</span></div>').join('');
+  document.querySelectorAll('.cat-rename').forEach(b => b.onclick = () => renameCategory(b.dataset.cat));
+  document.querySelectorAll('.cat-delete').forEach(b => b.onclick = () => deleteCategory(b.dataset.cat));
+}
+async function renameCategory(oldName){
+  if (!adminLoggedIn){ openAdminLogin(); return; }
+  const newName = prompt('Nuevo nombre para la categoría:', oldName);
+  if (!newName || !newName.trim() || newName.trim() === oldName) return;
+  const trimmed = newName.trim();
+  if (getCategories().includes(trimmed)){ toast('Esa categoría ya existe'); return; }
+  PRODUCTS.forEach(p => { if ((p.category||'General') === oldName) p.category = trimmed; });
+  renderAdminGrid(); renderGrid(); renderCatsList();
+  for (const p of PRODUCTS.filter(x=>(x.category||'General')===trimmed)) { if (window.__saveProductToFirebase) await window.__saveProductToFirebase(p); }
+  toast('Categoría renombrada');
+}
+async function deleteCategory(cat){
+  if (!adminLoggedIn){ openAdminLogin(); return; }
+  if (!confirm('¿Eliminar la categoría "'+cat+'"? Sus productos pasarán a General.')) return;
+  const affected = PRODUCTS.filter(p=>(p.category||'General')===cat);
+  affected.forEach(p => p.category = 'General');
+  renderAdminGrid(); renderGrid(); renderCatsList();
+  for (const p of affected) { if (window.__saveProductToFirebase) await window.__saveProductToFirebase(p); }
+  toast('Categoría borrada');
+}
+async function deleteProductAdmin(id){
+  if (!adminLoggedIn){ openAdminLogin(); return; }
+  const pr = byId[id] || PRODUCTS.find(x=>x.id===id);
+  if (!pr) return;
+  if (!confirm('¿Eliminar definitivamente "'+pr.name+'"? No se puede deshacer.')) return;
+  const idx = PRODUCTS.findIndex(x=>x.id===id);
+  if (idx>=0) PRODUCTS.splice(idx,1);
+  delete byId[id];
+  if (cart[id]) delete cart[id];
+  saveCart();
+  renderAdminGrid(); renderGrid(); updateCartUI();
+  if (window.__deleteProductFromFirebase) await window.__deleteProductFromFirebase(id);
+  toast('Producto eliminado');
+}
+function readFileAsDataUrl(file){
+  return new Promise((resolve,reject)=>{
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result||''));
+    r.onerror = () => reject(new Error('No se pudo leer la foto.'));
+    r.readAsDataURL(file);
   });
 }
 document.getElementById('adminBtn').addEventListener('click', () => {
@@ -846,6 +1055,16 @@ document.getElementById('adminBtn').addEventListener('click', () => {
 });
 document.getElementById('adminLoginClose').addEventListener('click', closeAdminLogin);
 document.getElementById('adminPanelClose').addEventListener('click', closeAdminPanel);
+document.getElementById('adminAddBtn').addEventListener('click', () => { if (!adminLoggedIn){ openAdminLogin(); return; } openAddProduct(); });
+document.getElementById('adminCatsBtn').addEventListener('click', () => { if (!adminLoggedIn){ openAdminLogin(); return; } openCats(); });
+document.getElementById('adminEditClose').addEventListener('click', closeEditProduct);
+document.getElementById('adminAddClose').addEventListener('click', closeAddProduct);
+document.getElementById('adminCatsClose').addEventListener('click', closeCats);
+document.querySelectorAll('.admin-tab').forEach(b => b.addEventListener('click', () => {
+  adminTab = b.dataset.tab;
+  document.querySelectorAll('.admin-tab').forEach(x=>x.classList.toggle('active', x===b));
+  renderAdminGrid();
+}));
 document.getElementById('adminLoginBtn').addEventListener('click', () => {
   const email = document.getElementById('adminEmailInput').value.trim();
   const pass = document.getElementById('adminPasswordInput').value;
@@ -858,8 +1077,7 @@ document.getElementById('adminLogoutBtn').addEventListener('click', () => {
   if (window.__adminLogout) window.__adminLogout();
   closeAdminPanel();
 });
-document.getElementById('adminSearch').addEventListener('input', renderAdminGrid);
-document.getElementById('adminFiltro').addEventListener('change', renderAdminGrid);
+document.getElementById('adminSearch').addEventListener('input', e => { adminQuery = e.target.value.trim(); renderAdminGrid(); });
 document.getElementById('adminFileInput').addEventListener('change', e => {
   const f = e.target.files && e.target.files[0];
   if (!f || !adminPendingId) return;
@@ -879,9 +1097,84 @@ document.getElementById('adminFileInput').addEventListener('change', e => {
   im.src = url;
   e.target.value = '';
 });
+document.getElementById('editSaveBtn').addEventListener('click', async () => {
+  if (!adminLoggedIn){ openAdminLogin(); return; }
+  const id = document.getElementById('editId').value;
+  const pr = byId[id] || PRODUCTS.find(x=>x.id===id);
+  if (!pr) return;
+  const errEl = document.getElementById('editError');
+  const name = document.getElementById('editName').value.trim();
+  const code = document.getElementById('editCode').value.trim();
+  const priceVal = document.getElementById('editPrice').value;
+  const pieces = document.getElementById('editPieces').value.trim();
+  let cat = document.getElementById('editCategory').value;
+  if (cat === '__nueva__'){ const n = prompt('Nombre de la nueva categoría:'); if (!n || !n.trim()){ errEl.textContent='Escribe el nombre de la categoría.'; return; } cat = n.trim(); }
+  if (!name || !code || priceVal === '' || isNaN(parseFloat(priceVal))){ errEl.textContent='Completa nombre, código y precio.'; return; }
+  errEl.textContent = 'Guardando…';
+  try {
+    const file = document.getElementById('editImage').files[0];
+    let img = pr.image;
+    if (file){
+      const dataUrl = await readFileAsDataUrl(file);
+      const url = URL.createObjectURL(file); const im = new Image();
+      await new Promise((res,rej)=>{ im.onload=res; im.onerror=()=>rej(new Error('No se pudo leer la foto')); im.src=url; });
+      const max=640; let w=im.width,h=im.height;
+      if (w>max||h>max){ const s=max/Math.max(w,h); w=Math.round(w*s); h=Math.round(h*s); }
+      const c=document.createElement('canvas'); c.width=w; c.height=h; c.getContext('2d').drawImage(im,0,0,w,h); URL.revokeObjectURL(url);
+      img = c.toDataURL('image/jpeg',0.72);
+    }
+    pr.name=name; pr.code=code; pr.price=parseFloat(priceVal); pr.pieces=pieces; pr.category=cat; pr.image=img;
+    closeEditProduct(); renderAdminGrid(); renderGrid();
+    if (window.__saveProductToFirebase) await window.__saveProductToFirebase(pr);
+    toast('Producto actualizado');
+  } catch(e){ errEl.textContent = e.message || 'No se pudo guardar.'; }
+});
+document.getElementById('addSaveBtn').addEventListener('click', async () => {
+  if (!adminLoggedIn){ openAdminLogin(); return; }
+  const errEl = document.getElementById('addError');
+  const name = document.getElementById('addName').value.trim();
+  const code = document.getElementById('addCode').value.trim();
+  const priceVal = document.getElementById('addPrice').value;
+  const pieces = document.getElementById('addPieces').value.trim();
+  let cat = document.getElementById('addCategory').value;
+  if (cat === '__nueva__'){ const n = prompt('Nombre de la nueva categoría:'); if (!n || !n.trim()){ errEl.textContent='Escribe el nombre de la categoría.'; return; } cat = n.trim(); }
+  const file = document.getElementById('addImage').files[0];
+  if (!name || !code || priceVal === '' || isNaN(parseFloat(priceVal))){ errEl.textContent='Completa nombre, código y precio.'; return; }
+  if (!file){ errEl.textContent='Selecciona una foto.'; return; }
+  errEl.textContent = 'Guardando…';
+  try {
+    const dataUrl = await readFileAsDataUrl(file);
+    const url = URL.createObjectURL(file); const im = new Image();
+    await new Promise((res,rej)=>{ im.onload=res; im.onerror=()=>rej(new Error('No se pudo leer la foto')); im.src=url; });
+    const max=640; let w=im.width,h=im.height;
+    if (w>max||h>max){ const s=max/Math.max(w,h); w=Math.round(w*s); h=Math.round(h*s); }
+    const c=document.createElement('canvas'); c.width=w; c.height=h; c.getContext('2d').drawImage(im,0,0,w,h); URL.revokeObjectURL(url);
+    const img = c.toDataURL('image/jpeg',0.72);
+    const newP = { id: Date.now().toString(), name, code, price: parseFloat(priceVal), pieces, category: cat, image: img, outOfStock: false, sold: 0 };
+    PRODUCTS.unshift(newP); byId[newP.id]=newP;
+    closeAddProduct(); renderAdminGrid(); renderGrid();
+    if (window.__saveProductToFirebase) await window.__saveProductToFirebase(newP);
+    toast('Producto agregado');
+  } catch(e){ errEl.textContent = e.message || 'No se pudo guardar.'; }
+});
+document.getElementById('newCatBtn').addEventListener('click', () => {
+  const inp = document.getElementById('newCatName');
+  const n = inp.value.trim();
+  if (!n) return;
+  if (getCategories().includes(n)){ toast('Esa categoría ya existe'); return; }
+  // Create a placeholder by adding category via prompt for first product? Instead, categories exist when a product uses them.
+  // For now, create a hidden product? No: just inform user to assign category when adding/editing a product.
+  // To support empty categories, we store them in localStorage list merged into getCategories.
+  try {
+    const extra = JSON.parse(localStorage.getItem('digar_extra_cats') || '[]');
+    if (!extra.includes(n)) extra.push(n);
+    localStorage.setItem('digar_extra_cats', JSON.stringify(extra));
+  } catch(e){}
+  inp.value=''; renderCatsList(); toast('Categoría agregada: ' + n);
+});
 /* Overlay cierra checkout/admin también */
 const _origOverlay = document.getElementById('overlay');
-_origOverlay.addEventListener('click', () => { closeCheckout(); closeAdminLogin(); closeAdminPanel(); });
+_origOverlay.addEventListener('click', () => { closeCheckout(); closeAdminLogin(); closeAdminPanel(); closeEditProduct(); closeAddProduct(); closeCats(); });
 if (location.hash === '#admin' || location.hash === '#administrador'){
   setTimeout(() => { if (adminLoggedIn) openAdminPanel(); else openAdminLogin(); }, 600);
 }
@@ -967,7 +1260,7 @@ if ('serviceWorker' in navigator) {
 </script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, onSnapshot, setDoc } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, onSnapshot, setDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
 const firebaseConfig = {
   apiKey: 'AIzaSyBW2CuE6HcgqMoIccoUo8UBrYfPkW4scD8',
@@ -1016,6 +1309,13 @@ window.__saveProductToFirebase = async function(p) {
     await setDoc(doc(db, 'productos', productDocId(product.id)), product);
     console.log('[DIGAR] Guardado en Firebase:', product.name);
   } catch(e) { console.error(e); alert('No se pudo guardar en Firebase: ' + (e.message || e)); }
+};
+window.__deleteProductFromFirebase = async function(id) {
+  try {
+    if (!auth.currentUser) { alert('Inicia sesión como administrador para eliminar.'); return; }
+    await deleteDoc(doc(db, 'productos', productDocId(id)));
+    console.log('[DIGAR] Eliminado de Firebase:', id);
+  } catch(e) { console.error(e); alert('No se pudo eliminar en Firebase: ' + (e.message || e)); }
 };
 window.__adminLogin = async function(email, pass) { await signInWithEmailAndPassword(auth, email, pass); };
 window.__adminLogout = async function() { await signOut(auth); };
